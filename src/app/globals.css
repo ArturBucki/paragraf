@@ -1,0 +1,42 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f1e9ea;
+  --surface: #fcf9f9;
+  --ink: #241a27;
+  --ink-soft: #5c4f5f;
+  --line: #e4d6da;
+  --coral: #e2543f;
+  --coral-deep: #be3d2a;
+  --berry: #7a459c;
+  --gold: #c88a2a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16101a;
+    --surface: #1f1824;
+    --ink: #f2e8ec;
+    --ink-soft: #b7a6b5;
+    --line: #332839;
+    --coral: #f4715b;
+    --coral-deep: #ff8e79;
+    --berry: #c299e6;
+    --gold: #e7b458;
+  }
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hanken Grotesk", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
