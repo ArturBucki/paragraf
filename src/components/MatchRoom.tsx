@@ -4,13 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { GAMES, gameById } from "@/lib/games";
+import { GAMES, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
-import { GameWheel } from "@/components/GameWheel";
 import { GameBar } from "@/components/GameBar";
+import { GamePicker } from "@/components/GamePicker";
 import { Riddle } from "@/components/games/Riddle";
 import { TicTacToe } from "@/components/games/TicTacToe";
 import { Charades } from "@/components/games/Charades";
@@ -44,6 +44,7 @@ export function MatchRoom({
   initialPoints,
   initialGames,
   initialMessages,
+  today,
 }: {
   matchId: string;
   meId: string;
@@ -52,6 +53,8 @@ export function MatchRoom({
   initialPoints: number;
   initialGames: MatchGame[];
   initialMessages: Message[];
+  /** Data z serwera — żeby „gra dnia" była identyczna u obojga. */
+  today: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [points, setPoints] = useState(initialPoints);
@@ -196,7 +199,9 @@ export function MatchRoom({
 
     if (g && !alreadyPlayed) {
       const before = points;
-      const after = before + g.pts;
+      const isDaily = gameOfTheDay(matchId, today, before).id === gameId;
+      const gain = g.pts + (isDaily ? DAILY_BONUS : 0);
+      const after = before + gain;
       setPoints(after);
       setRows((prev) => [
         ...prev.filter((r) => r.game_id !== gameId),
@@ -206,7 +211,7 @@ export function MatchRoom({
         (x) => x.unlock > before && x.unlock <= after,
       ).map((x) => x.name);
       flash(
-        `+${g.pts} pkt połączenia` +
+        `+${gain} pkt${isDaily ? " (gra dnia!)" : ""}` +
           (unlocked.length ? ` · Odblokowano: ${unlocked.join(", ")}` : ""),
       );
     }
@@ -292,6 +297,7 @@ export function MatchRoom({
           ready={ready ?? null}
           invited={invited ?? null}
           waiting={waiting ?? null}
+          daily={gameOfTheDay(matchId, today, points)}
           otherName={otherName}
           otherOnline={otherOnline}
           onOpen={() => setSheet(true)}
@@ -318,11 +324,13 @@ export function MatchRoom({
       </div>
 
       {sheet && (
-        <GameSheet
+        <GamePicker
           points={points}
           isA={isA}
           rows={rows}
           otherName={otherName}
+          today={today}
+          matchId={matchId}
           channel={channelRef.current}
           onClose={() => setSheet(false)}
           onToggle={onToggle}
@@ -499,118 +507,6 @@ function Composer({
         <Icon name="send" className="h-5 w-5" filled />
       </button>
     </form>
-  );
-}
-
-/* ------------------------------ WYBÓR GIER ------------------------------- */
-
-function GameSheet({
-  points,
-  isA,
-  rows,
-  otherName,
-  channel,
-  onClose,
-  onToggle,
-  onStart,
-}: {
-  points: number;
-  isA: boolean;
-  rows: MatchGame[];
-  otherName: string;
-  channel: RealtimeChannel | null;
-  onClose: () => void;
-  onToggle: (id: string) => void;
-  onStart: (id: string) => void;
-}) {
-  const available = GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock);
-  return (
-    <div className="fixed inset-0 z-40 flex items-end bg-black/50" onClick={onClose}>
-      <div
-        className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl border-t border-line bg-bg p-4 pb-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-xl font-extrabold">Wybierzcie grę</h2>
-          <span className="flex items-center gap-1 font-mono text-xs text-gold"><Icon name="spark" className="h-3.5 w-3.5" /> {points} pkt</span>
-        </div>
-        <p className="mb-4 text-sm text-inksoft">
-          Gra startuje, gdy oboje zaznaczycie to samo.
-        </p>
-
-        <div className="mb-5 rounded-3xl border border-line bg-surface/60 px-4 py-5">
-          <GameWheel games={available} channel={channel} onResult={onStart} />
-        </div>
-
-        <div className="mb-3 flex items-center gap-3">
-          <span className="h-px flex-1 bg-line" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-inksoft">
-            albo wybierzcie sami
-          </span>
-          <span className="h-px flex-1 bg-line" />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {GAMES.map((g) => {
-            const row = rows.find((r) => r.game_id === g.id);
-            const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
-            const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
-            const both = iWant && theyWant;
-            const locked = points < g.unlock;
-            const soon = !PLAYABLE.has(g.id);
-
-            return (
-              <div
-                key={g.id}
-                className={`flex items-center gap-3 rounded-2xl border p-3 ${
-                  both
-                    ? "border-[#8FE3C2] bg-[#8FE3C2]/12"
-                    : locked
-                      ? "border-dashed border-line opacity-60"
-                      : "border-line bg-surface"
-                }`}
-              >
-                <Icon name={g.icon} className="h-7 w-7 flex-none text-inksoft" />
-                <button
-                  onClick={() => onToggle(g.id)}
-                  disabled={locked}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <div className="font-mono text-[10px] uppercase tracking-wide text-inksoft">
-                    {g.tag} · +{g.pts} pkt
-                  </div>
-                  <div className="font-bold leading-tight">{g.name}</div>
-                  <div className="text-xs text-inksoft">{g.desc}</div>
-                </button>
-                <div className="flex w-[86px] flex-none flex-col items-end gap-1.5">
-                  {locked ? (
-                    <span className="flex items-center gap-1 rounded-full bg-line/40 px-2 py-1 text-[11px] text-inksoft">
-                      <Icon name="lock" className="h-3 w-3" /> {g.unlock}
-                    </span>
-                  ) : both ? (
-                    <button
-                      onClick={() => onStart(g.id)}
-                      className="rounded-full bg-[#8FE3C2] px-3.5 py-1.5 text-xs font-extrabold text-[#06281A]"
-                    >
-                      START
-                    </button>
-                  ) : (
-                    <span className="flex flex-col items-end gap-0.5">
-                      <Dot label="Ty" on={iWant} />
-                      <Dot label={otherName} on={theyWant} />
-                    </span>
-                  )}
-                  {row?.played && !both && (
-                    <span className="text-[10px] text-inksoft">zagrane ✓</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
   );
 }
 

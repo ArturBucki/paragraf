@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { GAMES, gameById } from "@/lib/games";
+import { GAMES, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
 
 // Zgoda na losowanie trzymana jako pseudo-gra w tej samej tabeli.
 const RANDOM_ID = "__random__";
@@ -105,7 +105,11 @@ export async function finishGame(
   }
 
   const before = match.points ?? 0;
-  const after = before + game.pts;
+  // Bonus za grę dnia liczy serwer — inaczej dałoby się go wymusić z klienta.
+  const today = new Date().toISOString().slice(0, 10);
+  const isDaily = gameOfTheDay(matchId, today, before).id === gameId;
+  const awarded = game.pts + (isDaily ? DAILY_BONUS : 0);
+  const after = before + awarded;
 
   // Cztery niezależne zapisy — lecą równolegle zamiast jeden po drugim.
   await Promise.all([
@@ -129,7 +133,9 @@ export async function finishGame(
     supabase.from("messages").insert({
       match_id: matchId,
       sender: user.id,
-      body: `__system__Zagraliście w „${game.name}" · +${game.pts} pkt połączenia`,
+      body: `__system__Zagraliście w „${game.name}" · +${awarded} pkt${
+        isDaily ? " (gra dnia)" : ""
+      }`,
     }),
   ]);
 
@@ -137,7 +143,7 @@ export async function finishGame(
     (g) => g.name,
   );
 
-  return { ok: true, awarded: game.pts, points: after, unlocked };
+  return { ok: true, awarded, points: after, unlocked };
 }
 
 /** Wysyła wiadomość w rozmowie pary. */

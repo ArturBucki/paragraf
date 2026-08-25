@@ -47,6 +47,7 @@ export default async function MatchPage({
         initialPoints={match.points ?? 0}
         initialGames={games ?? []}
         initialMessages={messages ?? []}
+        today={new Date().toISOString().slice(0, 10)}
       />
     </main>
   );

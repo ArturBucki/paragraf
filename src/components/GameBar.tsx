@@ -14,6 +14,7 @@ export function GameBar({
   waiting,
   otherName,
   otherOnline,
+  daily,
   onOpen,
   onStart,
   onToggle,
@@ -21,6 +22,7 @@ export function GameBar({
   ready: Game | null;
   invited: Game | null;
   waiting: Game | null;
+  daily: Game | null;
   otherName: string;
   otherOnline: boolean;
   onOpen: () => void;
@@ -112,15 +114,20 @@ export function GameBar({
       onClick={onOpen}
       className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left transition active:scale-[0.99]"
     >
-      <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-bg">
-        <Icon name="gamepad" className="h-5 w-5 text-coral" />
+      <span
+        className="grid h-10 w-10 flex-none place-items-center rounded-xl"
+        style={{ background: daily ? `${daily.accent}22` : "var(--bg)", color: daily?.accent }}
+      >
+        <Icon name={daily ? daily.icon : "gamepad"} className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold leading-tight">Zagrajcie razem</span>
+        <span className="block text-sm font-bold leading-tight">
+          {daily ? `Gra dnia: ${daily.name}` : "Zagrajcie razem"}
+        </span>
         <span className="block text-[11px] text-inksoft">
           {otherOnline
             ? `${otherName} jest teraz online — dobry moment`
-            : "wybierz grę albo zakręćcie kołem"}
+            : "dziś z bonusem punktowym"}
         </span>
       </span>
       <span className="flex-none rounded-full bg-coral px-3.5 py-2 text-xs font-extrabold text-[#06281A]">
