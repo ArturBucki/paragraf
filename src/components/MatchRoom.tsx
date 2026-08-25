@@ -9,6 +9,7 @@ import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
+import { GameWheel } from "@/components/GameWheel";
 import { Riddle } from "@/components/games/Riddle";
 import { TicTacToe } from "@/components/games/TicTacToe";
 import { Charades } from "@/components/games/Charades";
@@ -202,8 +203,14 @@ export function MatchRoom({
     );
   }
 
-  const randomRow = rowFor(RANDOM_ID);
-  const randomBoth = !!randomRow?.a_wants && !!randomRow?.b_wants;
+  const ready = GAMES.find((g) => {
+    const r = rowFor(g.id);
+    return !!r?.a_wants && !!r?.b_wants;
+  });
+  const invited = GAMES.find((g) => {
+    const r = rowFor(g.id);
+    return isA ? r?.b_wants && !r?.a_wants : r?.a_wants && !r?.b_wants;
+  });
 
   return (
     <div className="flex h-[100dvh] flex-col">
@@ -245,53 +252,49 @@ export function MatchRoom({
         onRandom={drawRandom}
       />
 
-      {/* pasek gier + pole wiadomości */}
-      <div className="flex-none border-t border-line pt-2">
-        <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+      {/* gotowa gra + pole wiadomości */}
+      <div className="flex-none pt-1">
+        {ready && (
           <button
-            onClick={drawRandom}
-            className={`flex-none rounded-full px-3 py-1.5 text-xs font-bold transition ${
-              randomBoth
-                ? "bg-[#8FE3C2] text-[#06281A]"
-                : "border border-line bg-surface text-ink"
-            }`}
+            onClick={() => startGame(ready.id)}
+            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-[#8FE3C2] bg-[#8FE3C2]/12 px-3 py-2.5 text-left transition active:scale-[0.99]"
           >
-            <span className="flex items-center gap-1.5"><Icon name="dice" className="h-4 w-4" /> Losuj grę</span>
+            <Icon name={ready.icon} className="h-5 w-5 flex-none text-berry" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-tight">{ready.name}</span>
+              <span className="block text-[11px] text-inksoft">
+                oboje chcecie — możecie zaczynać
+              </span>
+            </span>
+            <span className="flex-none rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]">
+              Start
+            </span>
           </button>
-          <button
-            onClick={() => setSheet(true)}
-            className="flex-none rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold"
-          >
-            <span className="flex items-center gap-1.5"><Icon name="gamepad" className="h-4 w-4" /> Wybierz grę</span>
-          </button>
-          {GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock)
-            .slice(0, 3)
-            .map((g) => {
-              const row = rowFor(g.id);
-              const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
-              const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
-              const both = iWant && theyWant;
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => (both ? startGame(g.id) : onToggle(g.id))}
-                  className={`flex-none rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                    both
-                      ? "bg-[#8FE3C2] text-[#06281A]"
-                      : iWant
-                        ? "border border-coral bg-coral/15 text-coraldeep"
-                        : theyWant
-                          ? "border border-berry bg-berry/15 text-berry"
-                          : "border border-line bg-surface text-inksoft"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5"><Icon name={g.icon} className="h-4 w-4" /> {both ? "Zagrajcie!" : g.name}</span>
-                </button>
-              );
-            })}
-        </div>
+        )}
 
-        <Composer matchId={matchId} locked={!playedAny} onOpenGames={() => setSheet(true)} />
+        {!ready && invited && (
+          <button
+            onClick={() => onToggle(invited.id)}
+            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-berry/50 bg-berry/10 px-3 py-2.5 text-left transition active:scale-[0.99]"
+          >
+            <Icon name={invited.icon} className="h-5 w-5 flex-none text-berry" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-tight">{invited.name}</span>
+              <span className="block text-[11px] text-inksoft">
+                {otherName} czeka na Twoją zgodę
+              </span>
+            </span>
+            <span className="flex-none rounded-full border border-berry px-3 py-1.5 text-xs font-bold text-berry">
+              Wchodzę
+            </span>
+          </button>
+        )}
+
+        <Composer
+          matchId={matchId}
+          locked={!playedAny}
+          onOpenGames={() => setSheet(true)}
+        />
       </div>
 
       {sheet && (
@@ -300,10 +303,10 @@ export function MatchRoom({
           isA={isA}
           rows={rows}
           otherName={otherName}
+          channel={channelRef.current}
           onClose={() => setSheet(false)}
           onToggle={onToggle}
           onStart={startGame}
-          onRandom={drawRandom}
         />
       )}
 
@@ -441,20 +444,28 @@ function Composer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-2 flex gap-2">
+    <form onSubmit={submit} className="mb-2 flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onOpenGames}
+        aria-label="Gry"
+        className="grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface text-inksoft transition active:scale-95"
+      >
+        <Icon name="gamepad" className="h-5 w-5" />
+      </button>
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Napisz coś…"
-        className="flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
+        className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
       />
       <button
         type="submit"
         disabled={sending}
         aria-label="Wyślij"
-        className="h-11 w-11 flex-none rounded-full bg-coral text-[#06281A] disabled:opacity-50"
+        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[#06281A] disabled:opacity-50"
       >
-        <Icon name="send" className="mx-auto h-5 w-5" filled />
+        <Icon name="send" className="h-5 w-5" filled />
       </button>
     </form>
   );
@@ -467,20 +478,21 @@ function GameSheet({
   isA,
   rows,
   otherName,
+  channel,
   onClose,
   onToggle,
   onStart,
-  onRandom,
 }: {
   points: number;
   isA: boolean;
   rows: MatchGame[];
   otherName: string;
+  channel: RealtimeChannel | null;
   onClose: () => void;
   onToggle: (id: string) => void;
   onStart: (id: string) => void;
-  onRandom: () => void;
 }) {
+  const available = GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock);
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/50" onClick={onClose}>
       <div
@@ -496,21 +508,17 @@ function GameSheet({
           Gra startuje, gdy oboje zaznaczycie to samo.
         </p>
 
-        <button
-          onClick={onRandom}
-          className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-line bg-surface p-3 text-left"
-        >
-          <Icon name="dice" className="h-7 w-7 flex-none text-coral" />
-          <span className="flex-1">
-            <span className="block font-bold">Wylosujcie grę</span>
-            <span className="block text-xs text-inksoft">
-              Apka wybierze coś z dostępnych
-            </span>
+        <div className="mb-5 rounded-3xl border border-line bg-surface/60 px-4 py-5">
+          <GameWheel games={available} channel={channel} onResult={onStart} />
+        </div>
+
+        <div className="mb-3 flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-inksoft">
+            albo wybierzcie sami
           </span>
-          <span className="rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-[#06281A]">
-            Losuj
-          </span>
-        </button>
+          <span className="h-px flex-1 bg-line" />
+        </div>
 
         <div className="flex flex-col gap-2">
           {GAMES.map((g) => {
