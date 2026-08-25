@@ -68,3 +68,31 @@ textarea::placeholder {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Pole formularza — jeden wygląd dla input/textarea/select w całej apce. */
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0.75rem 0.875rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--ink);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.input:hover {
+  border-color: var(--coral-deep);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--coral);
+  background: var(--surface-2);
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 5.5rem;
+}

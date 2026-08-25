@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Profile } from "@/lib/types";
-import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
 import { gameById } from "@/lib/games";
 import { Icon } from "@/components/Icon";
@@ -74,10 +74,7 @@ export function MatchesList({
                     }`}
                   >
                     <div className="h-full w-full overflow-hidden rounded-full border-2 border-bg">
-                      <Avatar
-                        spec={p?.avatar ?? DEFAULT_AVATAR}
-                        className="h-full w-full"
-                      />
+                      <ProfilePhoto profile={p ?? null} />
                     </div>
                     {m.waitingGame && (
                       <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full border-2 border-bg bg-coral text-[11px]">
@@ -117,10 +114,7 @@ export function MatchesList({
                 >
                   <div className="relative h-14 w-14 shrink-0">
                     <div className="h-full w-full overflow-hidden rounded-full">
-                      <Avatar
-                        spec={p?.avatar ?? DEFAULT_AVATAR}
-                        className="h-full w-full"
-                      />
+                      <ProfilePhoto profile={p ?? null} />
                     </div>
                     {isOnline && (
                       <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-bg bg-[#8FE3C2]" />

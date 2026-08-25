@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { AvatarSpec } from "@/lib/types";
+import { GENDERS, LOOKING_FOR, INTERESTS } from "@/lib/types";
 
 const PALETTES: AvatarSpec[] = [
   { skin: "#F3C9A8", hair: "#B07C46", cloth: "#5E9E96", bg: "#F7D8C4", style: "wavy" },
@@ -16,40 +17,68 @@ const PALETTES: AvatarSpec[] = [
   { skin: "#EFC6A6", hair: "#4A2E1F", cloth: "#8E5BA6", bg: "#EADDF2", style: "bangs" },
 ];
 
-/** Zapis danych profilu z ustawień. */
-export async function updateProfile(formData: FormData) {
+async function me() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  return { supabase, user };
+}
 
-  const name = String(formData.get("name") || "").trim();
-  const age = Number(formData.get("age") || 0) || null;
-  const bio = String(formData.get("bio") || "").trim();
-  const games = formData.getAll("games").map(String);
+/** Zapis profilu z ustawień. */
+export async function updateProfile(formData: FormData) {
+  const { supabase, user } = await me();
+
+  const str = (k: string, max = 120) =>
+    String(formData.get(k) ?? "").trim().slice(0, max) || null;
+
+  const gender = str("gender");
+  const looking = str("looking_for");
+  const height = Number(formData.get("height_cm") || 0) || null;
+
+  // Wybory ze słowników walidujemy — formularz można podmienić po stronie klienta.
+  const interests = formData
+    .getAll("interests")
+    .map(String)
+    .filter((i) => (INTERESTS as readonly string[]).includes(i))
+    .slice(0, 8);
 
   await supabase
     .from("profiles")
-    .update({ name, age, bio, games })
+    .update({
+      name: str("name", 40),
+      age: Number(formData.get("age") || 0) || null,
+      bio: str("bio", 300),
+      city: str("city", 60),
+      job: str("job", 60),
+      education: str("education", 60),
+      height_cm: height && height >= 120 && height <= 230 ? height : null,
+      gender: gender && (GENDERS as readonly string[]).includes(gender) ? gender : null,
+      looking_for:
+        looking && (LOOKING_FOR as readonly string[]).includes(looking) ? looking : null,
+      interests,
+    })
     .eq("id", user.id);
 
   revalidatePath("/settings");
-  revalidatePath("/swipe");
   redirect("/settings?zapisano=1");
 }
 
-/** Losuje nowy wygląd awatara (do czasu wprowadzenia prawdziwych zdjęć). */
-export async function rerollAvatar() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+/** Zapis listy zdjęć (kolejność ma znaczenie — pierwsze jest główne). */
+export async function savePhotos(photos: string[]) {
+  const { supabase, user } = await me();
+  const clean = photos.filter((p) => typeof p === "string").slice(0, 6);
+  await supabase.from("profiles").update({ photos: clean }).eq("id", user.id);
+  revalidatePath("/settings");
+  return { ok: true };
+}
 
+/** Losuje nowy wygląd rysowanego awatara (gdy ktoś nie chce zdjęcia). */
+export async function rerollAvatar() {
+  const { supabase, user } = await me();
   const avatar = PALETTES[Math.floor(Math.random() * PALETTES.length)];
   await supabase.from("profiles").update({ avatar }).eq("id", user.id);
-
   revalidatePath("/settings");
   redirect("/settings");
 }

@@ -19,7 +19,11 @@ export type IconName =
   | "heart"
   | "close"
   | "send"
-  | "back";
+  | "back"
+  | "pin"
+  | "work"
+  | "cap"
+  | "ruler";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // Talia kart — odkrywanie
@@ -111,6 +115,36 @@ const PATHS: Record<IconName, React.ReactNode> = {
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
   send: <path d="M4.5 12 20 4.5 15.5 20l-4-6.2Z" />,
   back: <path d="M14.5 5.5 8 12l6.5 6.5" />,
+
+  // Miasto — pinezka
+  pin: (
+    <>
+      <path d="M12 21c4-4.6 6-7.8 6-10.4A6 6 0 0 0 6 10.6C6 13.2 8 16.4 12 21Z" />
+      <circle cx="12" cy="10.4" r="2.2" />
+    </>
+  ),
+  // Praca — teczka
+  work: (
+    <>
+      <rect x="3.2" y="7.6" width="17.6" height="12" rx="2.4" />
+      <path d="M9 7.6V6.2A1.8 1.8 0 0 1 10.8 4.4h2.4A1.8 1.8 0 0 1 15 6.2v1.4" />
+      <path d="M3.2 12.6h17.6" />
+    </>
+  ),
+  // Wykształcenie — czapka
+  cap: (
+    <>
+      <path d="M12 4.6 21.4 9 12 13.4 2.6 9 12 4.6Z" />
+      <path d="M6.6 11v4.4c0 1.5 2.4 2.8 5.4 2.8s5.4-1.3 5.4-2.8V11" />
+    </>
+  ),
+  // Wzrost — miarka
+  ruler: (
+    <>
+      <rect x="3.4" y="8.6" width="17.2" height="6.8" rx="1.8" />
+      <path d="M7.6 8.6v2.6M12 8.6v3.6M16.4 8.6v2.6" />
+    </>
+  ),
 };
 
 export function Icon({

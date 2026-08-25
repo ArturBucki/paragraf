@@ -6,7 +6,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { GAMES, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
 import type { Profile } from "@/lib/types";
-import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
 import { GameBar } from "@/components/GameBar";
@@ -260,7 +260,7 @@ export function MatchRoom({
         </Link>
         <div className="relative h-11 w-11 shrink-0">
           <div className="h-full w-full overflow-hidden rounded-full">
-            <Avatar spec={other?.avatar ?? DEFAULT_AVATAR} className="h-full w-full" />
+            <ProfilePhoto profile={other ?? null} />
           </div>
           {otherOnline && (
             <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#8FE3C2]" />
