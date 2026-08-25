@@ -16,6 +16,19 @@ export type Profile = {
   height_cm: number | null;
   interests: string[];
 
+  /** Kim jestem i kogo szukam. */
+  orientation: string[];
+  interested_in: string | null;
+
+  /** Styl życia — krótkie odpowiedzi, same kliknięcia. */
+  drinking: string | null;
+  smoking: string | null;
+  workout: string | null;
+  pets: string | null;
+  kids: string | null;
+  zodiac: string | null;
+  languages: string[];
+
   created_at?: string;
 };
 
@@ -37,19 +50,106 @@ export type Match = {
   created_at: string;
 };
 
-/** Słowniki do wyboru w profilu — krótkie, żeby nie robić ankiety. */
-export const GENDERS = ["Kobieta", "Mężczyzna", "Inna"] as const;
+/**
+ * Słowniki profilu. Wszystko jest klikane — nikt nie chce wypełniać ankiety
+ * na telefonie. Każda odpowiedź jest krótka i po ludzku sformułowana.
+ */
+export const GENDERS = [
+  "Kobieta",
+  "Mężczyzna",
+  "Osoba niebinarna",
+  "Wolę nie mówić",
+] as const;
+
+/** Orientacja — wielokrotny wybór, bo ludzie nie mieszczą się w jednej etykiecie. */
+export const ORIENTATIONS = [
+  "Hetero",
+  "Gej",
+  "Lesbijka",
+  "Bi",
+  "Pan",
+  "Aseksualna",
+  "Queer",
+  "Szukam nazwy",
+] as const;
+export const MAX_ORIENTATION = 3;
+
+/** Kogo chcę widzieć w swipe. */
+export const INTERESTED_IN = ["Kobiety", "Mężczyzn", "Wszystkich"] as const;
 
 export const LOOKING_FOR = [
   "Związek",
+  "Randki",
   "Coś luźnego",
   "Przyjaźń",
-  "Zobaczymy",
+  "Jeszcze nie wiem",
 ] as const;
 
-export const INTERESTS = [
-  "Kawa", "Podróże", "Kino", "Muzyka", "Koncerty", "Gotowanie",
-  "Bieganie", "Siłownia", "Wspinaczka", "Rower", "Góry", "Morze",
-  "Książki", "Planszówki", "Gry", "Fotografia", "Sztuka", "Taniec",
-  "Psy", "Koty", "Joga", "Wino", "Stand-up", "Programowanie",
+export const DRINKING = ["Nie piję", "Okazjonalnie", "Towarzysko", "Często"] as const;
+export const SMOKING = ["Nie palę", "Okazjonalnie", "Palę", "Vape"] as const;
+export const WORKOUT = [
+  "Codziennie",
+  "Kilka razy w tygodniu",
+  "Czasem",
+  "Sport to nie moja bajka",
 ] as const;
+export const PETS = ["Pies", "Kot", "Inne zwierzę", "Bez zwierząt", "Alergia"] as const;
+export const KIDS = ["Mam dzieci", "Chcę kiedyś", "Nie chcę", "Jeszcze nie wiem"] as const;
+
+export const ZODIAC = [
+  "Baran", "Byk", "Bliźnięta", "Rak", "Lew", "Panna",
+  "Waga", "Skorpion", "Strzelec", "Koziorożec", "Wodnik", "Ryby",
+] as const;
+
+export const LANGUAGES = [
+  "Polski", "Angielski", "Niemiecki", "Hiszpański", "Francuski",
+  "Włoski", "Ukraiński", "Rosyjski", "Migowy",
+] as const;
+export const MAX_LANGUAGES = 5;
+
+/**
+ * Zainteresowania w grupach — łatwiej wybrać z półki niż z jednej długiej listy.
+ * Kolor grupy wraca potem na karcie w swipe.
+ */
+export const INTEREST_GROUPS = [
+  {
+    name: "Ruch",
+    accent: "#8FE3C2",
+    items: ["Bieganie", "Siłownia", "Joga", "Wspinaczka", "Rower", "Pływanie",
+      "Piłka", "Siatkówka", "Narty", "Tenis"],
+  },
+  {
+    name: "Kultura",
+    accent: "#C299E6",
+    items: ["Kino", "Seriale", "Muzyka", "Koncerty", "Teatr", "Książki",
+      "Sztuka", "Fotografia", "Stand-up", "Podcasty"],
+  },
+  {
+    name: "Jedzenie i wieczory",
+    accent: "#FF9F6B",
+    items: ["Kawa", "Gotowanie", "Wino", "Piwo kraftowe", "Sushi", "Pizza",
+      "Wegetariańsko", "Słodycze", "Grill", "Śniadania na mieście"],
+  },
+  {
+    name: "Granie",
+    accent: "#F5C86B",
+    items: ["Planszówki", "Gry", "Karty", "Szachy", "Quizy", "Escape roomy",
+      "Kalambury", "Bilard"],
+  },
+  {
+    name: "Świat",
+    accent: "#7FD8E8",
+    items: ["Podróże", "Góry", "Morze", "Miasto", "Camping", "Festiwale",
+      "Rolki", "Zwiedzanie"],
+  },
+  {
+    name: "Codzienność",
+    accent: "#FF6B4A",
+    items: ["Psy", "Koty", "Rośliny", "Programowanie", "Majsterkowanie",
+      "Moda", "Wolontariat", "Nauka języków"],
+  },
+] as const;
+
+/** Płaska lista — do walidacji po stronie serwera. */
+export const INTERESTS = INTEREST_GROUPS.flatMap((g) => g.items as readonly string[]);
+export const MAX_INTERESTS = 8;

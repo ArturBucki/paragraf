@@ -88,6 +88,15 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
   if (current.education) meta.push({ icon: "cap", text: current.education });
   if (current.height_cm) meta.push({ icon: "ruler", text: `${current.height_cm} cm` });
 
+  // Drobiazgi ze stylu życia — jedna cicha linijka, żeby nie zagłuszyć reszty.
+  const facts = [
+    current.zodiac,
+    current.pets,
+    current.drinking,
+    current.workout,
+    current.kids,
+  ].filter(Boolean) as string[];
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="relative flex-1 overflow-hidden rounded-3xl border border-line bg-surface">
@@ -149,6 +158,10 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
                 </span>
               ))}
             </div>
+          )}
+
+          {facts.length > 0 && (
+            <p className="mt-1 text-[12px] opacity-80">{facts.slice(0, 4).join(" · ")}</p>
           )}
 
           {current.bio && (

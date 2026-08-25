@@ -4,7 +4,25 @@ import { Icon } from "@/components/Icon";
 import { BottomNav } from "@/components/BottomNav";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
-import { GENDERS, LOOKING_FOR, INTERESTS, type Profile } from "@/lib/types";
+import { ChipOne, ChipMany, InterestPicker } from "@/components/ProfilePickers";
+import { Section, Field, Pick } from "@/components/ProfileSection";
+import {
+  GENDERS,
+  ORIENTATIONS,
+  MAX_ORIENTATION,
+  INTERESTED_IN,
+  LOOKING_FOR,
+  DRINKING,
+  SMOKING,
+  WORKOUT,
+  PETS,
+  KIDS,
+  ZODIAC,
+  LANGUAGES,
+  MAX_LANGUAGES,
+  MAX_INTERESTS,
+  type Profile,
+} from "@/lib/types";
 import { updateProfile, rerollAvatar, signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -28,21 +46,35 @@ export default async function Settings({
 
   const profile = (data ?? null) as Profile | null;
 
-  // Ile z profilu jest wypełnione — konkretny powód, żeby go dokończyć.
-  const filled = [
-    profile?.photos?.length,
-    profile?.bio,
-    profile?.city,
-    profile?.job,
-    profile?.gender,
-    profile?.looking_for,
-    profile?.interests?.length,
-  ].filter(Boolean).length;
-  const completeness = Math.round((filled / 7) * 100);
+  // Ile sekcji jest gotowe — konkretny powód, żeby dokończyć profil.
+  const sections = {
+    basics: [profile?.name, profile?.age, profile?.city, profile?.height_cm],
+    about: [profile?.bio, profile?.job, profile?.education, profile?.languages?.length],
+    who: [
+      profile?.gender,
+      profile?.orientation?.length,
+      profile?.interested_in,
+      profile?.looking_for,
+    ],
+    life: [
+      profile?.drinking,
+      profile?.smoking,
+      profile?.workout,
+      profile?.pets,
+      profile?.kids,
+    ],
+    likes: [profile?.interests?.length],
+  };
+  const done = (xs: unknown[]) => xs.filter(Boolean).length;
+  const all = Object.values(sections).flat();
+  const withPhotos = [...all, profile?.photos?.length];
+  const completeness = Math.round(
+    (done(withPhotos) / withPhotos.length) * 100,
+  );
 
   return (
     <>
-      <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-4 pb-28 pt-6">
+      <main className="mx-auto flex min-h-screen max-w-md flex-col gap-5 px-4 pb-28 pt-6">
         <header className="flex items-center gap-4">
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-line">
             <ProfilePhoto profile={profile} />
@@ -59,7 +91,6 @@ export default async function Settings({
           </div>
         </header>
 
-        {/* uzupełnienie profilu */}
         <section className="rounded-2xl border border-line bg-surface p-4">
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="font-semibold">Profil uzupełniony w {completeness}%</span>
@@ -91,63 +122,87 @@ export default async function Settings({
           </form>
         )}
 
-        <form action={updateProfile} className="flex flex-col gap-5">
-          <Field label="Imię">
-            <input
-              name="name"
-              required
-              maxLength={40}
-              defaultValue={profile?.name ?? ""}
-              className="input"
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Wiek">
+        <form action={updateProfile} className="flex flex-col gap-3">
+          <Section
+            icon="user"
+            title="Podstawy"
+            hint="Imię, wiek, gdzie jesteś"
+            done={done(sections.basics)}
+            total={sections.basics.length}
+            open
+          >
+            <Field label="Imię">
               <input
-                name="age"
-                type="number"
-                min={18}
-                max={120}
-                defaultValue={profile?.age ?? ""}
+                name="name"
+                required
+                maxLength={40}
+                defaultValue={profile?.name ?? ""}
                 className="input"
               />
             </Field>
-            <Field label="Wzrost (cm)">
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Wiek">
+                <input
+                  name="age"
+                  type="number"
+                  min={18}
+                  max={120}
+                  defaultValue={profile?.age ?? ""}
+                  className="input"
+                />
+              </Field>
+              <Field label="Wzrost (cm)">
+                <input
+                  name="height_cm"
+                  type="number"
+                  min={120}
+                  max={230}
+                  placeholder="—"
+                  defaultValue={profile?.height_cm ?? ""}
+                  className="input"
+                />
+              </Field>
+            </div>
+
+            <Field label="Miasto">
               <input
-                name="height_cm"
-                type="number"
-                min={120}
-                max={230}
-                placeholder="—"
-                defaultValue={profile?.height_cm ?? ""}
+                name="city"
+                maxLength={60}
+                defaultValue={profile?.city ?? ""}
+                placeholder="np. Warszawa"
                 className="input"
               />
             </Field>
-          </div>
 
-          <Field label="O sobie">
-            <textarea
-              name="bio"
-              rows={3}
-              maxLength={300}
-              defaultValue={profile?.bio ?? ""}
-              placeholder="Kilka zdań — to widzą inni na karcie."
-              className="input"
-            />
-          </Field>
+            <Pick label="Znak zodiaku">
+              <ChipOne
+                name="zodiac"
+                options={ZODIAC}
+                value={profile?.zodiac ?? null}
+                accent="#F5C86B"
+              />
+            </Pick>
+          </Section>
 
-          <Field label="Miasto">
-            <input
-              name="city"
-              maxLength={60}
-              defaultValue={profile?.city ?? ""}
-              placeholder="np. Warszawa"
-              className="input"
-            />
-          </Field>
+          <Section
+            icon="chat"
+            title="O mnie"
+            hint="To, co czytają przed pierwszą grą"
+            done={done(sections.about)}
+            total={sections.about.length}
+          >
+            <Field label="Kilka zdań o sobie">
+              <textarea
+                name="bio"
+                rows={3}
+                maxLength={300}
+                defaultValue={profile?.bio ?? ""}
+                placeholder="Co robisz, gdy masz wolny wieczór?"
+                className="input"
+              />
+            </Field>
 
-          <div className="grid grid-cols-1 gap-3">
             <Field label="Czym się zajmujesz">
               <input
                 name="job"
@@ -157,6 +212,7 @@ export default async function Settings({
                 className="input"
               />
             </Field>
+
             <Field label="Wykształcenie">
               <input
                 name="education"
@@ -166,46 +222,126 @@ export default async function Settings({
                 className="input"
               />
             </Field>
-          </div>
 
-          <Field label="Płeć">
-            <Choice name="gender" options={[...GENDERS]} value={profile?.gender ?? null} />
-          </Field>
+            <Pick label="Języki">
+              <ChipMany
+                name="languages"
+                options={LANGUAGES}
+                value={profile?.languages ?? []}
+                max={MAX_LANGUAGES}
+                accent="#7FD8E8"
+              />
+            </Pick>
+          </Section>
 
-          <Field label="Czego szukasz">
-            <Choice
-              name="looking_for"
-              options={[...LOOKING_FOR]}
-              value={profile?.looking_for ?? null}
+          <Section
+            icon="heart"
+            title="Ja i kogo szukam"
+            hint="Płeć, orientacja, czego szukasz"
+            done={done(sections.who)}
+            total={sections.who.length}
+          >
+            <Pick label="Płeć">
+              <ChipOne
+                name="gender"
+                options={GENDERS}
+                value={profile?.gender ?? null}
+              />
+            </Pick>
+
+            <Pick label="Orientacja" hint={`Możesz wskazać do ${MAX_ORIENTATION}.`}>
+              <ChipMany
+                name="orientation"
+                options={ORIENTATIONS}
+                value={profile?.orientation ?? []}
+                max={MAX_ORIENTATION}
+                accent="#C299E6"
+              />
+            </Pick>
+
+            <Pick label="Pokazuj mi" hint="Kogo chcesz widzieć w swipe.">
+              <ChipOne
+                name="interested_in"
+                options={INTERESTED_IN}
+                value={profile?.interested_in ?? null}
+                accent="#8FE3C2"
+              />
+            </Pick>
+
+            <Pick label="Czego szukasz">
+              <ChipOne
+                name="looking_for"
+                options={LOOKING_FOR}
+                value={profile?.looking_for ?? null}
+              />
+            </Pick>
+          </Section>
+
+          <Section
+            icon="spark"
+            title="Styl życia"
+            hint="Pięć szybkich klików"
+            done={done(sections.life)}
+            total={sections.life.length}
+          >
+            <Pick label="Alkohol">
+              <ChipOne
+                name="drinking"
+                options={DRINKING}
+                value={profile?.drinking ?? null}
+                accent="#FF9F6B"
+              />
+            </Pick>
+            <Pick label="Papierosy">
+              <ChipOne
+                name="smoking"
+                options={SMOKING}
+                value={profile?.smoking ?? null}
+                accent="#FF9F6B"
+              />
+            </Pick>
+            <Pick label="Sport">
+              <ChipOne
+                name="workout"
+                options={WORKOUT}
+                value={profile?.workout ?? null}
+                accent="#8FE3C2"
+              />
+            </Pick>
+            <Pick label="Zwierzaki">
+              <ChipOne
+                name="pets"
+                options={PETS}
+                value={profile?.pets ?? null}
+                accent="#7FD8E8"
+              />
+            </Pick>
+            <Pick label="Dzieci">
+              <ChipOne
+                name="kids"
+                options={KIDS}
+                value={profile?.kids ?? null}
+                accent="#C299E6"
+              />
+            </Pick>
+          </Section>
+
+          <Section
+            icon="puzzle"
+            title="Zainteresowania"
+            hint="Wspólne tematy widać na karcie"
+            done={done(sections.likes)}
+            total={sections.likes.length}
+          >
+            <InterestPicker
+              value={profile?.interests ?? []}
+              max={MAX_INTERESTS}
             />
-          </Field>
-
-          <div>
-            <p className="mb-1 font-mono text-[11px] uppercase tracking-wide text-inksoft">
-              Zainteresowania
-            </p>
-            <p className="mb-2 text-xs text-inksoft">Wybierz do ośmiu.</p>
-            <div className="flex flex-wrap gap-2">
-              {INTERESTS.map((i) => (
-                <label key={i} className="cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="interests"
-                    value={i}
-                    defaultChecked={profile?.interests?.includes(i) ?? false}
-                    className="peer sr-only"
-                  />
-                  <span className="block rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-inksoft peer-checked:border-coral peer-checked:bg-coral/15 peer-checked:text-coraldeep">
-                    {i}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+          </Section>
 
           <button
             type="submit"
-            className="rounded-xl bg-coral px-4 py-3.5 font-bold text-[#06281A]"
+            className="sticky bottom-24 z-10 rounded-xl bg-coral px-4 py-3.5 font-bold text-[#06281A] shadow-lg transition active:scale-[0.99]"
           >
             Zapisz zmiany
           </button>
@@ -224,46 +360,5 @@ export default async function Settings({
       </main>
       <BottomNav />
     </>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="font-mono text-[11px] uppercase tracking-wide text-inksoft">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-/** Wybór jednej opcji — pigułki zamiast listy rozwijanej. */
-function Choice({
-  name,
-  options,
-  value,
-}: {
-  name: string;
-  options: string[];
-  value: string | null;
-}) {
-  return (
-    <span className="flex flex-wrap gap-2">
-      {options.map((o) => (
-        <label key={o} className="cursor-pointer">
-          <input
-            type="radio"
-            name={name}
-            value={o}
-            defaultChecked={value === o}
-            className="peer sr-only"
-          />
-          <span className="block rounded-full border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-inksoft peer-checked:border-coral peer-checked:bg-coral/15 peer-checked:text-coraldeep">
-            {o}
-          </span>
-        </label>
-      ))}
-    </span>
   );
 }

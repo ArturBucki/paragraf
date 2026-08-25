@@ -30,11 +30,23 @@ export default async function SwipePage() {
     ...(passed ?? []).map((r) => r.passed),
   ];
 
-  const { data: candidates } = await supabase
+  // „Pokazuj mi" z ustawień naprawdę zawęża talię.
+  // Profile bez wypełnionej płci zostawiamy — inaczej nowi znikaliby wszystkim.
+  const wantGender =
+    me.interested_in === "Kobiety"
+      ? "Kobieta"
+      : me.interested_in === "Mężczyzn"
+        ? "Mężczyzna"
+        : null;
+
+  let query = supabase
     .from("profiles")
     .select("*")
-    .not("id", "in", `(${seen.join(",")})`)
-    .limit(25);
+    .not("id", "in", `(${seen.join(",")})`);
+
+  if (wantGender) query = query.or(`gender.eq.${wantGender},gender.is.null`);
+
+  const { data: candidates } = await query.limit(25);
 
   return (
     <>
