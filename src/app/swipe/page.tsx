@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 import { SwipeDeck } from "@/components/SwipeDeck";
+import { BottomNav } from "@/components/BottomNav";
 
 export const dynamic = "force-dynamic";
 
@@ -37,16 +37,19 @@ export default async function SwipePage() {
     .limit(25);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-4">
-      <header className="mb-3 flex items-center justify-between px-2">
-        <span className="font-display text-xl font-extrabold">
-          para<span className="text-coral">graf</span>
-        </span>
-        <Link href="/matches" prefetch className="font-mono text-xs uppercase tracking-wide text-inksoft">
-          Dopasowania →
-        </Link>
-      </header>
-      <SwipeDeck candidates={(candidates as Profile[]) ?? []} />
-    </main>
+    <>
+      <main className="mx-auto flex h-[100dvh] max-w-md flex-col px-4 pb-[76px] pt-4">
+        <header className="mb-3 flex flex-none items-center justify-between px-1">
+          <span className="font-display text-xl font-extrabold">
+            para<span className="text-coral">graf</span>
+          </span>
+          <span className="font-mono text-[11px] uppercase tracking-wide text-inksoft">
+            {(candidates ?? []).length} osób w pobliżu
+          </span>
+        </header>
+        <SwipeDeck candidates={(candidates as Profile[]) ?? []} />
+      </main>
+      <BottomNav />
+    </>
   );
 }

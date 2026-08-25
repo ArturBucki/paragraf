@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 import { MatchesList, type MatchRow } from "@/components/MatchesList";
+import { BottomNav } from "@/components/BottomNav";
 
 export const dynamic = "force-dynamic";
 
@@ -18,33 +18,43 @@ export default async function MatchesPage() {
     .order("created_at", { ascending: false });
 
   const list = matches ?? [];
+  const ids = list.map((m) => m.id);
   const otherIds = list.map((m) => (m.user_a === user.id ? m.user_b : m.user_a));
 
-  const [{ data: others }, { data: games }] = await Promise.all([
+  const [{ data: others }, { data: games }, { data: msgs }] = await Promise.all([
     otherIds.length
       ? supabase.from("profiles").select("*").in("id", otherIds)
       : Promise.resolve({ data: [] as Profile[] }),
-    list.length
+    ids.length
+      ? supabase.from("match_games").select("*").in("match_id", ids).eq("played", false)
+      : Promise.resolve({ data: [] as any[] }),
+    ids.length
       ? supabase
-          .from("match_games")
-          .select("*")
-          .in(
-            "match_id",
-            list.map((m) => m.id),
-          )
-          .eq("played", false)
+          .from("messages")
+          .select("match_id, body, created_at")
+          .in("match_id", ids)
+          .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as any[] }),
   ]);
 
   const profiles: Record<string, Profile> = {};
   for (const p of (others ?? []) as Profile[]) profiles[p.id] = p;
 
+  // Ostatnia wiadomość na parę (lista jest już posortowana malejąco po dacie).
+  const lastByMatch: Record<string, string> = {};
+  for (const m of (msgs ?? []) as any[]) {
+    if (lastByMatch[m.match_id]) continue;
+    lastByMatch[m.match_id] = String(m.body).startsWith("__system__")
+      ? String(m.body).replace("__system__", "")
+      : String(m.body);
+  }
+
   const rows: MatchRow[] = list.map((m) => {
     const isA = m.user_a === user.id;
-    // Gra, którą druga osoba zaznaczyła, a Ty jeszcze nie — czeka na Ciebie.
     const waiting = (games ?? []).find(
       (g: any) =>
         g.match_id === m.id &&
+        g.game_id !== "__random__" &&
         (isA ? g.b_wants && !g.a_wants : g.a_wants && !g.b_wants),
     );
     return {
@@ -52,23 +62,20 @@ export default async function MatchesPage() {
       otherId: isA ? m.user_b : m.user_a,
       points: m.points ?? 0,
       waitingGame: waiting?.game_id ?? null,
+      lastMessage: lastByMatch[m.id] ?? null,
+      played: (m.points ?? 0) > 0,
     };
   });
 
-  return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 py-6">
-      <header className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-extrabold">Dopasowania</h1>
-        <Link
-          href="/swipe"
-          prefetch
-          className="font-mono text-xs uppercase tracking-wide text-inksoft"
-        >
-          ← Swipe
-        </Link>
-      </header>
+  const waitingCount = rows.filter((r) => r.waitingGame).length;
 
-      <MatchesList meId={user.id} matches={rows} profiles={profiles} />
-    </main>
+  return (
+    <>
+      <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 pb-24 pt-6">
+        <h1 className="font-display text-2xl font-extrabold">Pary</h1>
+        <MatchesList meId={user.id} matches={rows} profiles={profiles} />
+      </main>
+      <BottomNav badge={waitingCount} />
+    </>
   );
 }
