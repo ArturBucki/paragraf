@@ -8,20 +8,22 @@
  * Jedna paleta dla landingu i całej apki — 70/20/10:
  *  70%  butelkowa zieleń  — grunt
  *  20%  ciepły kremowy    — treść
- *  10%  koral             — akcent (tylko akcje)
+ *  10%  koral             — akcent (tylko akcje i to, co ma przyciągnąć wzrok)
+ *
+ * Apka celowo trzyma jeden, ciemny wariant — spójny z landingiem.
  */
 :root {
   --bg: #0a3b2c;
-  --surface: #0e4736;
+  --surface: #12543f;
   --surface-2: #07301f;
   --ink: #f2efe4;
   --ink-soft: #b6c6ba;
-  --line: #1c5744;
+  --line: #3a8a70;
   --coral: #ff6b4a;
   --coral-deep: #ff8f76;
   --berry: #8fe3c2;
   --gold: #f5c86b;
-  --on-coral: #0a3b2c;
+  --on-coral: #06281a;
 }
 
 html,
@@ -41,6 +43,7 @@ body {
   color: var(--on-coral);
 }
 
+/* Widoczny focus — dostępność klawiatury. */
 :where(a, button, input, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--coral);
   outline-offset: 2px;

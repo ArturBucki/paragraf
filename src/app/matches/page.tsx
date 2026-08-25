@@ -1,17 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
 export default async function MatchesPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/login");
+  const supabase = createClient();
 
   const { data: matches } = await supabase
     .from("matches")

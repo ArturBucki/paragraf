@@ -1,16 +1,14 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 import { GAMES } from "@/lib/games";
 import { saveProfile } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function Onboarding() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/login");
+  const supabase = createClient();
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -79,7 +77,7 @@ export default async function Onboarding() {
 
         <button
           type="submit"
-          className="mt-2 rounded-xl bg-coral px-4 py-3 font-bold text-[#0A3B2C]"
+          className="mt-2 rounded-xl bg-coral px-4 py-3 font-bold text-[#06281A]"
         >
           Zapisz i przejdź do swipe
         </button>

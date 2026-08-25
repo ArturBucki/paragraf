@@ -1,17 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 import { SwipeDeck } from "@/components/SwipeDeck";
 
 export const dynamic = "force-dynamic";
 
 export default async function SwipePage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/login");
+  const supabase = createClient();
 
   const { data: me } = await supabase
     .from("profiles")
