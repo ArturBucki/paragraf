@@ -9,15 +9,21 @@ import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
-import { GameBar } from "@/components/GameBar";
 import { GamePicker } from "@/components/GamePicker";
+import { GameRail } from "@/components/GameRail";
+import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
 import { TicTacToe } from "@/components/games/TicTacToe";
 import { Charades } from "@/components/games/Charades";
 import { Truths } from "@/components/games/Truths";
 import { Questions36 } from "@/components/games/Questions36";
 import { EscapeRoom } from "@/components/games/EscapeRoom";
-import { toggleWantGame, finishGame, sendMessage } from "@/app/matches/[id]/actions";
+import {
+  toggleWantGame,
+  declineGame,
+  finishGame,
+  sendMessage,
+} from "@/app/matches/[id]/actions";
 
 type MatchGame = {
   game_id: string;
@@ -75,6 +81,13 @@ export function MatchRoom({
     setTimeout(() => setToast(null), 3200);
   }, []);
 
+  // Kanał realtime zakładamy raz — te referencje pozwalają mu sięgać
+  // po aktualne dane bez ponownej subskrypcji przy każdym renderze.
+  const flashRef = useRef(flash);
+  flashRef.current = flash;
+  const otherNameRef = useRef(otherName);
+  otherNameRef.current = otherName;
+
   const rowFor = useCallback(
     (id: string) => rows.find((r) => r.game_id === id),
     [rows],
@@ -121,6 +134,10 @@ export function MatchRoom({
           setActive(payload.gameId as string);
         }
       })
+      .on("broadcast", { event: "decline" }, ({ payload }) => {
+        const g = payload?.gameId ? gameById(payload.gameId as string) : null;
+        if (g) flashRef.current(`${otherNameRef.current} woli teraz nie grać w „${g.name}".`);
+      })
       .subscribe();
 
     channelRef.current = ch;
@@ -164,6 +181,28 @@ export function MatchRoom({
       optimisticToggle(gameId);
       flash(res.error);
     }
+  }
+
+  /** Przyjmuję zaproszenie: zaznaczam chęć i od razu wchodzimy oboje. */
+  function acceptInvite(gameId: string) {
+    optimisticToggle(gameId);
+    toggleWantGame(matchId, gameId).catch(() => {});
+    startGame(gameId);
+  }
+
+  /** Odrzucam: kasujemy chęć obojga i mówimy o tym drugiej osobie. */
+  function declineInvite(gameId: string) {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.game_id === gameId ? { ...r, a_wants: false, b_wants: false } : r,
+      ),
+    );
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "decline",
+      payload: { gameId },
+    });
+    declineGame(matchId, gameId).catch(() => {});
   }
 
   function startGame(gameId: string) {
@@ -238,6 +277,17 @@ export function MatchRoom({
     );
   }
 
+  const stateFor = (id: string) => {
+    const r = rowFor(id);
+    const g = gameById(id);
+    return {
+      mine: !!(isA ? r?.a_wants : r?.b_wants),
+      theirs: !!(isA ? r?.b_wants : r?.a_wants),
+      played: !!r?.played,
+      locked: !!g && points < g.unlock,
+    };
+  };
+
   const ready = GAMES.find((g) => {
     const r = rowFor(g.id);
     return !!r?.a_wants && !!r?.b_wants;
@@ -281,45 +331,67 @@ export function MatchRoom({
         </span>
       </header>
 
-      {/* rozmowa */}
-      <Stream
-        messages={messages}
-        meId={meId}
-        otherName={otherName}
-        locked={!playedAny}
-        onOpenGames={() => setSheet(true)}
-        onRandom={drawRandom}
-      />
+      {/* rozmowa + pasek gier tuż obok */}
+      <div className="flex min-h-0 flex-1 gap-2">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Stream
+            messages={messages}
+            meId={meId}
+            otherName={otherName}
+            locked={!playedAny}
+            onOpenGames={() => setSheet(true)}
+            onRandom={drawRandom}
+          />
 
-      {/* gotowa gra + pole wiadomości */}
-      <div className="flex-none pt-1">
-        <GameBar
-          ready={ready ?? null}
-          invited={invited ?? null}
-          waiting={waiting ?? null}
-          daily={gameOfTheDay(matchId, today, points)}
-          otherName={otherName}
-          otherOnline={otherOnline}
-          onOpen={() => setSheet(true)}
-          onStart={startGame}
-          onToggle={onToggle}
-        />
+          {/* kto chce grać — zaproszenie, oczekiwanie albo gotowy start */}
+          <div className="flex-none pt-1">
+            {ready ? (
+              <GameReady
+                game={ready}
+                otherName={otherName}
+                onStart={() => startGame(ready.id)}
+              />
+            ) : invited ? (
+              <GameInvite
+                game={invited}
+                otherName={otherName}
+                onAccept={() => acceptInvite(invited.id)}
+                onDecline={() => declineInvite(invited.id)}
+              />
+            ) : waiting ? (
+              <GameWaiting
+                game={waiting}
+                otherName={otherName}
+                otherOnline={otherOnline}
+                onCancel={() => onToggle(waiting.id)}
+              />
+            ) : null}
 
-        <Composer
-          matchId={matchId}
-          locked={!playedAny}
-          onOpenGames={() => setSheet(true)}
-          onOptimistic={(body) =>
-            setMessages((prev) => [
-              ...prev,
-              { id: -Date.now(), sender: meId, body, created_at: "" },
-            ])
-          }
-          onFailed={(body) =>
-            setMessages((prev) =>
-              prev.filter((m) => !(m.id < 0 && m.body === body)),
-            )
-          }
+            <Composer
+              matchId={matchId}
+              locked={!playedAny}
+              onOpenGames={() => setSheet(true)}
+              onOptimistic={(body) =>
+                setMessages((prev) => [
+                  ...prev,
+                  { id: -Date.now(), sender: meId, body, created_at: "" },
+                ])
+              }
+              onFailed={(body) =>
+                setMessages((prev) =>
+                  prev.filter((m) => !(m.id < 0 && m.body === body)),
+                )
+              }
+            />
+          </div>
+        </div>
+
+        <GameRail
+          dailyId={gameOfTheDay(matchId, today, points).id}
+          stateFor={stateFor}
+          onPick={onToggle}
+          onOpenAll={() => setSheet(true)}
+          onRandom={drawRandom}
         />
       </div>
 
@@ -485,14 +557,6 @@ function Composer({
 
   return (
     <form onSubmit={submit} className="mb-2 flex items-center gap-2">
-      <button
-        type="button"
-        onClick={onOpenGames}
-        aria-label="Gry"
-        className="grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface text-inksoft transition active:scale-95"
-      >
-        <Icon name="gamepad" className="h-5 w-5" />
-      </button>
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}

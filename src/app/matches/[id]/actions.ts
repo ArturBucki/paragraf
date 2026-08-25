@@ -80,6 +80,24 @@ export async function toggleWantGame(
   return { ok: true };
 }
 
+/**
+ * Odrzuca zaproszenie: kasuje chęć obojga, więc pasek gier wraca do zera.
+ * Świadomie nie zapisujemy tego w rozmowie — „nie teraz" nie musi zostawiać śladu.
+ */
+export async function declineGame(matchId: string, gameId: string): Promise<Ok> {
+  const { supabase, user, match } = await loadMatch(matchId);
+  if (!user || !match) return { ok: false, error: "Brak dostępu." };
+
+  const { error } = await supabase
+    .from("match_games")
+    .update({ a_wants: false, b_wants: false, updated_at: new Date().toISOString() })
+    .eq("match_id", matchId)
+    .eq("game_id", gameId);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 /** Kończy grę: przyznaje punkty połączenia raz i odblokowuje czat. */
 export async function finishGame(
   matchId: string,
