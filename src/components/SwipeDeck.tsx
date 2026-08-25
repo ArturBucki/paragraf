@@ -49,7 +49,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         </p>
         <Link
           href="/matches"
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-white"
+          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#0A3B2C]"
         >
           Wybierzcie grę →
         </Link>
@@ -96,7 +96,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
                 return (
                   <span
                     key={gid}
-                    className="rounded-full bg-white/90 px-2 py-1 text-xs font-bold text-ink"
+                    className="rounded-full bg-[#F2EFE4] px-2 py-1 text-xs font-bold text-[#0A3B2C]"
                   >
                     {g.icon} {g.name}
                   </span>
@@ -118,7 +118,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         <button
           onClick={onLike}
           aria-label="Polub"
-          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-white"
+          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[#0A3B2C]"
         >
           ♥
         </button>

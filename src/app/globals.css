@@ -4,30 +4,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Jedna paleta dla landingu i całej apki — 70/20/10:
+ *  70%  butelkowa zieleń  — grunt
+ *  20%  ciepły kremowy    — treść
+ *  10%  koral             — akcent (tylko akcje)
+ */
 :root {
-  --bg: #f1e9ea;
-  --surface: #fcf9f9;
-  --ink: #241a27;
-  --ink-soft: #5c4f5f;
-  --line: #e4d6da;
-  --coral: #e2543f;
-  --coral-deep: #be3d2a;
-  --berry: #7a459c;
-  --gold: #c88a2a;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16101a;
-    --surface: #1f1824;
-    --ink: #f2e8ec;
-    --ink-soft: #b7a6b5;
-    --line: #332839;
-    --coral: #f4715b;
-    --coral-deep: #ff8e79;
-    --berry: #c299e6;
-    --gold: #e7b458;
-  }
+  --bg: #0a3b2c;
+  --surface: #0e4736;
+  --surface-2: #07301f;
+  --ink: #f2efe4;
+  --ink-soft: #b6c6ba;
+  --line: #1c5744;
+  --coral: #ff6b4a;
+  --coral-deep: #ff8f76;
+  --berry: #8fe3c2;
+  --gold: #f5c86b;
+  --on-coral: #0a3b2c;
 }
 
 html,
@@ -35,8 +29,39 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: "Hanken Grotesk", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
+}
+
+::selection {
+  background: var(--coral);
+  color: var(--on-coral);
+}
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+input,
+textarea {
+  color: var(--ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

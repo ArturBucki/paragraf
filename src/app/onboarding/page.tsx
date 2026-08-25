@@ -79,7 +79,7 @@ export default async function Onboarding() {
 
         <button
           type="submit"
-          className="mt-2 rounded-xl bg-coral px-4 py-3 font-bold text-white"
+          className="mt-2 rounded-xl bg-coral px-4 py-3 font-bold text-[#0A3B2C]"
         >
           Zapisz i przejdź do swipe
         </button>
