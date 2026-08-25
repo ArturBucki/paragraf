@@ -17,6 +17,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A3B2C] text-[#F2EFE4] antialiased">
+      {/* ---------------------------------------------------------------- nav */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <span className="font-display text-xl font-extrabold tracking-tight">
           para<span className="text-[#FF6B4A]">graf</span>
@@ -29,6 +30,7 @@ export default async function Home() {
         </Link>
       </header>
 
+      {/* --------------------------------------------------------------- hero */}
       <section className="mx-auto max-w-5xl px-6 pb-20 pt-10 md:pb-28 md:pt-16">
         <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-[#F2EFE4]/55">
           Randki inaczej
@@ -70,7 +72,7 @@ export default async function Home() {
           >
             Zacznij grać
           </Link>
-          
+          <a
             href="#jak-to-dziala"
             className="rounded-2xl border border-[#F2EFE4]/25 px-8 py-4 text-center font-semibold transition hover:border-[#F2EFE4]/60"
           >
@@ -79,6 +81,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ------------------------------------------------------------ problem */}
       <section className="border-y border-[#F2EFE4]/10 bg-[#07301F]">
         <div className="mx-auto grid max-w-5xl gap-8 px-6 py-14 md:grid-cols-3 md:py-16">
           {[
@@ -103,6 +106,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ------------------------------------------------------- jak to działa */}
       <section id="jak-to-dziala" className="mx-auto max-w-5xl px-6 py-20 md:py-24">
         <h2 className="max-w-[18ch] font-display text-3xl font-extrabold leading-tight tracking-tight md:text-5xl">
           Poznajecie się, robiąc coś <em className="not-italic text-[#FF6B4A]">razem</em>.
@@ -143,6 +147,7 @@ export default async function Home() {
         </ol>
       </section>
 
+      {/* --------------------------------------------------------------- gry */}
       <section className="border-y border-[#F2EFE4]/10 bg-[#07301F]">
         <div className="mx-auto max-w-5xl px-6 py-20 md:py-24">
           <h2 className="font-display text-3xl font-extrabold tracking-tight md:text-4xl">
@@ -175,6 +180,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ------------------------------------------------------------ punkty */}
       <section className="mx-auto max-w-5xl px-6 py-20 md:py-24">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div>
@@ -216,6 +222,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ---------------------------------------------------------------- cta */}
       <section className="border-t border-[#F2EFE4]/10 bg-[#07301F]">
         <div className="mx-auto max-w-3xl px-6 py-24 text-center md:py-28">
           <h2 className="font-display text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
