@@ -94,7 +94,14 @@ export function MatchRoom({
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
         (payload) => {
           const m = payload.new as Message;
-          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+          setMessages((prev) => {
+            if (prev.some((x) => x.id === m.id)) return prev;
+            // Usuń wersję optymistyczną (ujemne id), gdy dotrze prawdziwa.
+            const withoutTemp = prev.filter(
+              (x) => !(x.id < 0 && x.sender === m.sender && x.body === m.body),
+            );
+            return [...withoutTemp, m];
+          });
         },
       )
       .on(
@@ -178,16 +185,38 @@ export function MatchRoom({
     startGame(pick.id);
   }
 
-  async function onFinish(gameId: string) {
-    const res = await finishGame(matchId, gameId);
+  // Zamykamy grę i pokazujemy punkty OD RAZU — zapis leci w tle.
+  // Serwer i tak jest źródłem prawdy: realtime dośle właściwy stan,
+  // a przy podwójnym zakończeniu punkty i tak naliczą się raz.
+  function onFinish(gameId: string) {
+    const g = gameById(gameId);
+    const alreadyPlayed = !!rowFor(gameId)?.played;
+
     setActive(null);
-    if (res.awarded > 0) {
-      setPoints(res.points);
+
+    if (g && !alreadyPlayed) {
+      const before = points;
+      const after = before + g.pts;
+      setPoints(after);
+      setRows((prev) => [
+        ...prev.filter((r) => r.game_id !== gameId),
+        { game_id: gameId, a_wants: false, b_wants: false, played: true },
+      ]);
+      const unlocked = GAMES.filter(
+        (x) => x.unlock > before && x.unlock <= after,
+      ).map((x) => x.name);
       flash(
-        `+${res.awarded} pkt połączenia` +
-          (res.unlocked.length ? ` · Odblokowano: ${res.unlocked.join(", ")}` : ""),
+        `+${g.pts} pkt połączenia` +
+          (unlocked.length ? ` · Odblokowano: ${unlocked.join(", ")}` : ""),
       );
     }
+
+    finishGame(matchId, gameId)
+      .then((res) => {
+        // Wyrównanie z serwerem, gdyby druga osoba zdążyła pierwsza.
+        if (typeof res.points === "number") setPoints(res.points);
+      })
+      .catch(() => {});
   }
 
   if (active) {
@@ -274,6 +303,17 @@ export function MatchRoom({
           matchId={matchId}
           locked={!playedAny}
           onOpenGames={() => setSheet(true)}
+          onOptimistic={(body) =>
+            setMessages((prev) => [
+              ...prev,
+              { id: -Date.now(), sender: meId, body, created_at: "" },
+            ])
+          }
+          onFailed={(body) =>
+            setMessages((prev) =>
+              prev.filter((m) => !(m.id < 0 && m.body === body)),
+            )
+          }
         />
       </div>
 
@@ -393,13 +433,16 @@ function Composer({
   matchId,
   locked,
   onOpenGames,
+  onOptimistic,
+  onFailed,
 }: {
   matchId: string;
   locked: boolean;
   onOpenGames: () => void;
+  onOptimistic: (body: string) => void;
+  onFailed: (body: string) => void;
 }) {
   const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
 
   if (locked) {
     return (
@@ -412,15 +455,24 @@ function Composer({
     );
   }
 
-  async function submit(e: React.FormEvent) {
+  // Wiadomość ląduje w rozmowie od razu; wysyłka leci w tle.
+  function submit(e: React.FormEvent) {
     e.preventDefault();
     const body = text.trim();
-    if (!body || sending) return;
-    setSending(true);
+    if (!body) return;
     setText("");
-    const res = await sendMessage(matchId, body);
-    if (!res.ok) setText(body);
-    setSending(false);
+    onOptimistic(body);
+    sendMessage(matchId, body)
+      .then((res) => {
+        if (!res.ok) {
+          onFailed(body);
+          setText(body);
+        }
+      })
+      .catch(() => {
+        onFailed(body);
+        setText(body);
+      });
   }
 
   return (
@@ -441,9 +493,8 @@ function Composer({
       />
       <button
         type="submit"
-        disabled={sending}
         aria-label="Wyślij"
-        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[#06281A] disabled:opacity-50"
+        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[#06281A] transition active:scale-95"
       >
         <Icon name="send" className="h-5 w-5" filled />
       </button>

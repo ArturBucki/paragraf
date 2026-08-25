@@ -1,13 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { gameById } from "@/lib/games";
+import { GAMES, gameById } from "@/lib/games";
 
 // Zgoda na losowanie trzymana jako pseudo-gra w tej samej tabeli.
 const RANDOM_ID = "__random__";
 
 type Ok = { ok: true } | { ok: false; error: string };
+
+/**
+ * UWAGA co do wydajności: te akcje celowo NIE wołają revalidatePath.
+ * Zmiany i tak docierają do obu osób przez Realtime, a revalidatePath
+ * wymuszał pełne przerenderowanie strony pary po każdym kliknięciu —
+ * to było główne źródło „lagowania" przy odbieraniu punktów.
+ */
 
 async function loadMatch(matchId: string) {
   const supabase = createClient();
@@ -36,7 +43,6 @@ export async function toggleWantGame(
   const { supabase, user, match } = await loadMatch(matchId);
   if (!user || !match) return { ok: false, error: "Brak dostępu." };
 
-  // "__random__" to nie gra, tylko zgoda na losowanie — nie ma progu odblokowania.
   if (gameId !== RANDOM_ID) {
     const game = gameById(gameId);
     if (!game) return { ok: false, error: "Nie ma takiej gry." };
@@ -71,8 +77,6 @@ export async function toggleWantGame(
   );
 
   if (error) return { ok: false, error: error.message };
-
-  revalidatePath(`/matches/${matchId}`);
   return { ok: true };
 }
 
@@ -103,9 +107,9 @@ export async function finishGame(
   const before = match.points ?? 0;
   const after = before + game.pts;
 
-  await supabase
-    .from("match_games")
-    .upsert(
+  // Cztery niezależne zapisy — lecą równolegle zamiast jeden po drugim.
+  await Promise.all([
+    supabase.from("match_games").upsert(
       {
         match_id: matchId,
         game_id: gameId,
@@ -115,30 +119,24 @@ export async function finishGame(
         updated_at: new Date().toISOString(),
       },
       { onConflict: "match_id,game_id" },
-    );
+    ),
+    supabase.from("matches").update({ points: after }).eq("id", matchId),
+    supabase
+      .from("match_games")
+      .update({ a_wants: false, b_wants: false })
+      .eq("match_id", matchId)
+      .eq("game_id", RANDOM_ID),
+    supabase.from("messages").insert({
+      match_id: matchId,
+      sender: user.id,
+      body: `__system__Zagraliście w „${game.name}" · +${game.pts} pkt połączenia`,
+    }),
+  ]);
 
-  await supabase.from("matches").update({ points: after }).eq("id", matchId);
-
-  // Po rozegranej grze zerujemy też zgodę na losowanie, żeby nie startowało w kółko.
-  await supabase
-    .from("match_games")
-    .update({ a_wants: false, b_wants: false })
-    .eq("match_id", matchId)
-    .eq("game_id", RANDOM_ID);
-
-  const { GAMES } = await import("@/lib/games");
   const unlocked = GAMES.filter((g) => g.unlock > before && g.unlock <= after).map(
     (g) => g.name,
   );
 
-  // Ślad w rozmowie, żeby oboje widzieli, co się wydarzyło.
-  await supabase.from("messages").insert({
-    match_id: matchId,
-    sender: user.id,
-    body: `__system__Zagraliście w „${game.name}" · +${game.pts} pkt połączenia`,
-  });
-
-  revalidatePath(`/matches/${matchId}`);
   return { ok: true, awarded: game.pts, points: after, unlocked };
 }
 
