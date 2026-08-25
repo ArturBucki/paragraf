@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
-import { gameById } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 import { likeProfile, passProfile } from "@/app/actions";
 
@@ -85,25 +84,6 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
             {current.age ? `, ${current.age}` : ""}
           </h2>
           {current.bio && <p className="text-sm opacity-95">{current.bio}</p>}
-          {current.games?.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <span className="w-full font-mono text-[10px] uppercase tracking-wide opacity-90">
-                chce zagrać w
-              </span>
-              {current.games.map((gid) => {
-                const g = gameById(gid);
-                if (!g) return null;
-                return (
-                  <span
-                    key={gid}
-                    className="rounded-full bg-[#F2EFE4] px-2 py-1 text-xs font-bold text-[#06281A]"
-                  >
-                    <Icon name={g.icon} className="h-3.5 w-3.5" /> {g.name}
-                  </span>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
 

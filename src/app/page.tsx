@@ -121,7 +121,7 @@ export default async function Home() {
             {
               n: "01",
               t: "Swipe",
-              d: "Widzisz, kto Ci się podoba — i od razu, w co lubi grać.",
+              d: "Klasycznie — przeglądasz i decydujesz, kto Ci się podoba.",
             },
             {
               n: "02",

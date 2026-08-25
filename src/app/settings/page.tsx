@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
-import { GAMES } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { BottomNav } from "@/components/BottomNav";
@@ -101,34 +100,6 @@ export default async function Settings({
               className="rounded-xl border border-line bg-surface px-4 py-3"
             />
           </label>
-
-          <div>
-            <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-inksoft">
-              W co lubisz grać
-            </p>
-            <p className="mb-3 text-xs text-inksoft">
-              To pokazuje się na Twojej karcie — inni od razu widzą, co możecie robić.
-            </p>
-            <div className="flex flex-col gap-2">
-              {GAMES.map((g) => (
-                <label
-                  key={g.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 has-[:checked]:border-coral"
-                >
-                  <input
-                    type="checkbox"
-                    name="games"
-                    value={g.id}
-                    defaultChecked={profile?.games?.includes(g.id) ?? false}
-                    className="h-4 w-4 accent-[#FF6B4A]"
-                  />
-                  <Icon name={g.icon} className="h-5 w-5 text-inksoft" />
-                  <span className="flex-1 font-semibold">{g.name}</span>
-                  <span className="font-mono text-[10px] text-gold">+{g.pts}</span>
-                </label>
-              ))}
-            </div>
-          </div>
 
           <button
             type="submit"

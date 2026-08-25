@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
-import { GAMES } from "@/lib/games";
-import { Icon } from "@/components/Icon";
 import { saveProfile } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -48,33 +46,6 @@ export default async function Onboarding() {
           placeholder="Kilka słów o sobie…"
           className="rounded-xl border border-line bg-surface px-4 py-3"
         />
-
-        <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wide text-inksoft">
-            W co lubisz grać
-          </p>
-          <div className="flex flex-col gap-2">
-            {GAMES.map((g) => {
-              const checked = profile?.games?.includes(g.id) ?? false;
-              return (
-                <label
-                  key={g.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2 has-[:checked]:border-coral"
-                >
-                  <input
-                    type="checkbox"
-                    name="games"
-                    value={g.id}
-                    defaultChecked={checked}
-                    className="accent-coral"
-                  />
-                  <Icon name={g.icon} className="h-5 w-5 text-inksoft" />
-                  <span className="font-semibold">{g.name}</span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
 
         <button
           type="submit"
