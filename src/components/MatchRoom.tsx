@@ -8,6 +8,7 @@ import { GAMES, gameById } from "@/lib/games";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { riddleForMatch } from "@/lib/riddles";
+import { usePresence } from "@/lib/usePresence";
 import { toggleWantGame, finishGame, sendMessage } from "@/app/matches/[id]/actions";
 
 type MatchGame = {
@@ -58,6 +59,8 @@ export function MatchRoom({
 
   const otherName = other?.name ?? "Twój match";
   const playedAny = rows.some((r) => r.played);
+  const online = usePresence(meId);
+  const otherOnline = other ? online.has(other.id) : false;
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -131,8 +134,12 @@ export function MatchRoom({
 
   async function onToggle(gameId: string) {
     if (gameId === RANDOM_ID) {
+      optimisticToggle(gameId);
       const res = await toggleWantGame(matchId, gameId);
-      if (!res.ok) flash(res.error);
+      if (!res.ok) {
+        optimisticToggle(gameId);
+        flash(res.error);
+      }
       return;
     }
     const g = gameById(gameId);
@@ -145,8 +152,28 @@ export function MatchRoom({
       flash(`„${g.name}" dodamy wkrótce — na razie zagrajcie w coś innego.`);
       return;
     }
+    optimisticToggle(gameId);
     const res = await toggleWantGame(matchId, gameId);
-    if (!res.ok) flash(res.error);
+    if (!res.ok) {
+      optimisticToggle(gameId); // cofnij, jeśli serwer odmówił
+      flash(res.error);
+    }
+  }
+
+  // Zaznaczenie widać natychmiast — realtime i tak dosyła prawdę z serwera.
+  function optimisticToggle(gameId: string) {
+    setRows((prev) => {
+      const row = prev.find((r) => r.game_id === gameId) ?? {
+        game_id: gameId,
+        a_wants: false,
+        b_wants: false,
+        played: false,
+      };
+      const nextRow = isA
+        ? { ...row, a_wants: !row.a_wants }
+        : { ...row, b_wants: !row.b_wants };
+      return [...prev.filter((r) => r.game_id !== gameId), nextRow];
+    });
   }
 
   function startGame(gameId: string) {
@@ -196,9 +223,16 @@ export function MatchRoom({
         </div>
         <div className="flex-1">
           <div className="font-bold leading-tight">{otherName}</div>
-          <div className="text-xs text-inksoft">
-            {playedAny ? "rozmowa otwarta" : "zagrajcie, żeby otworzyć rozmowę"}
-          </div>
+          {otherOnline ? (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-berry">
+              <span className="h-2 w-2 rounded-full bg-[#8FE3C2]" />
+              jest teraz z Tobą — możecie grać
+            </div>
+          ) : (
+            <div className="text-xs text-inksoft">
+              offline — zaznacz grę, zobaczy ją po wejściu
+            </div>
+          )}
         </div>
         <span className="rounded-full bg-gold/15 px-3 py-1 font-mono text-xs font-bold text-gold">
           ✨ {points}

@@ -10,3 +10,4 @@ next-env.d.ts
 .env*
 _update.zip
 _full.zip
+_perf.zip

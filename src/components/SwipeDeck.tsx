@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
@@ -10,7 +10,6 @@ import { likeProfile, passProfile } from "@/app/actions";
 export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
   const [i, setI] = useState(0);
   const [matched, setMatched] = useState<Profile | null>(null);
-  const [, startTransition] = useTransition();
 
   const current = candidates[i];
 
@@ -18,23 +17,23 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
     setI((n) => n + 1);
   }
 
+  // Karta znika od razu — zapis leci w tle. Bez tego każdy swipe czekałby na serwer.
   function onLike() {
     if (!current) return;
     const c = current;
-    startTransition(async () => {
-      const res = await likeProfile(c.id);
-      if (res.matched) setMatched(c);
-      else next();
-    });
+    next();
+    likeProfile(c.id)
+      .then((res) => {
+        if (res.matched) setMatched(c);
+      })
+      .catch(() => {});
   }
 
   function onPass() {
     if (!current) return;
     const c = current;
-    startTransition(async () => {
-      await passProfile(c.id);
-      next();
-    });
+    next();
+    passProfile(c.id).catch(() => {});
   }
 
   if (matched) {

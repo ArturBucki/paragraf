@@ -42,7 +42,7 @@ export default async function SwipePage() {
         <span className="font-display text-xl font-extrabold">
           para<span className="text-coral">graf</span>
         </span>
-        <Link href="/matches" className="font-mono text-xs uppercase tracking-wide text-inksoft">
+        <Link href="/matches" prefetch className="font-mono text-xs uppercase tracking-wide text-inksoft">
           Dopasowania →
         </Link>
       </header>
