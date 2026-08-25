@@ -25,10 +25,7 @@ type Message = {
   created_at: string;
 };
 
-// Gry z gotową rozgrywką. Reszta czeka na kolejną iterację.
 const PLAYABLE = new Set(["riddle", "ttt", "draw"]);
-
-// Pseudo-gra: zgoda na losowanie. Trzymana w tej samej tabeli co zwykłe gry.
 const RANDOM_ID = "__random__";
 
 export function MatchRoom({
@@ -53,8 +50,8 @@ export function MatchRoom({
   const [rows, setRows] = useState<MatchGame[]>(initialGames);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [active, setActive] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [tab, setTab] = useState<"gry" | "rozmowa">("gry");
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const otherName = other?.name ?? "Twój match";
@@ -67,7 +64,11 @@ export function MatchRoom({
     setTimeout(() => setToast(null), 3200);
   }, []);
 
-  // Jeden kanał na parę: zmiany w bazie + ruchy w grze na żywo.
+  const rowFor = useCallback(
+    (id: string) => rows.find((r) => r.game_id === id),
+    [rows],
+  );
+
   useEffect(() => {
     const ch = supabase
       .channel(`match:${matchId}`)
@@ -77,10 +78,7 @@ export function MatchRoom({
         (payload) => {
           const row = payload.new as MatchGame;
           if (!row?.game_id) return;
-          setRows((prev) => {
-            const rest = prev.filter((r) => r.game_id !== row.game_id);
-            return [...rest, row];
-          });
+          setRows((prev) => [...prev.filter((r) => r.game_id !== row.game_id), row]);
         },
       )
       .on(
@@ -88,9 +86,7 @@ export function MatchRoom({
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
         (payload) => {
           const m = payload.new as Message;
-          setMessages((prev) =>
-            prev.some((x) => x.id === m.id) ? prev : [...prev, m],
-          );
+          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
         },
       )
       .on(
@@ -102,7 +98,10 @@ export function MatchRoom({
         },
       )
       .on("broadcast", { event: "start" }, ({ payload }) => {
-        if (payload?.gameId) setActive(payload.gameId as string);
+        if (payload?.gameId) {
+          setSheet(false);
+          setActive(payload.gameId as string);
+        }
       })
       .subscribe();
 
@@ -113,54 +112,6 @@ export function MatchRoom({
     };
   }, [supabase, matchId]);
 
-  const rowFor = (id: string) => rows.find((r) => r.game_id === id);
-
-  // Losuje spośród gier dostępnych dla tej pary i startuje ją u obojga.
-  function drawRandom() {
-    const pool = GAMES.filter(
-      (g) => PLAYABLE.has(g.id) && points >= g.unlock && !rowFor(g.id)?.played,
-    );
-    const source = pool.length
-      ? pool
-      : GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock);
-    if (!source.length) {
-      flash("Nie ma jeszcze z czego losować — zagrajcie w coś ręcznie.");
-      return;
-    }
-    const pick = source[Math.floor(Math.random() * source.length)];
-    flash(`🎲 Wylosowano: ${pick.name}`);
-    startGame(pick.id);
-  }
-
-  async function onToggle(gameId: string) {
-    if (gameId === RANDOM_ID) {
-      optimisticToggle(gameId);
-      const res = await toggleWantGame(matchId, gameId);
-      if (!res.ok) {
-        optimisticToggle(gameId);
-        flash(res.error);
-      }
-      return;
-    }
-    const g = gameById(gameId);
-    if (!g) return;
-    if (points < g.unlock) {
-      flash(`🔒 „${g.name}" odblokujecie przy ${g.unlock} pkt.`);
-      return;
-    }
-    if (!PLAYABLE.has(gameId)) {
-      flash(`„${g.name}" dodamy wkrótce — na razie zagrajcie w coś innego.`);
-      return;
-    }
-    optimisticToggle(gameId);
-    const res = await toggleWantGame(matchId, gameId);
-    if (!res.ok) {
-      optimisticToggle(gameId); // cofnij, jeśli serwer odmówił
-      flash(res.error);
-    }
-  }
-
-  // Zaznaczenie widać natychmiast — realtime i tak dosyła prawdę z serwera.
   function optimisticToggle(gameId: string) {
     setRows((prev) => {
       const row = prev.find((r) => r.game_id === gameId) ?? {
@@ -176,13 +127,47 @@ export function MatchRoom({
     });
   }
 
+  async function onToggle(gameId: string) {
+    if (gameId !== RANDOM_ID) {
+      const g = gameById(gameId);
+      if (!g) return;
+      if (points < g.unlock) {
+        flash(`🔒 „${g.name}" odblokujecie przy ${g.unlock} pkt.`);
+        return;
+      }
+      if (!PLAYABLE.has(gameId)) {
+        flash(`„${g.name}" dodamy wkrótce — wybierzcie coś innego.`);
+        return;
+      }
+    }
+    optimisticToggle(gameId);
+    const res = await toggleWantGame(matchId, gameId);
+    if (!res.ok) {
+      optimisticToggle(gameId);
+      flash(res.error);
+    }
+  }
+
   function startGame(gameId: string) {
+    setSheet(false);
     setActive(gameId);
-    channelRef.current?.send({
-      type: "broadcast",
-      event: "start",
-      payload: { gameId },
-    });
+    channelRef.current?.send({ type: "broadcast", event: "start", payload: { gameId } });
+  }
+
+  function drawRandom() {
+    const pool = GAMES.filter(
+      (g) => PLAYABLE.has(g.id) && points >= g.unlock && !rowFor(g.id)?.played,
+    );
+    const source = pool.length
+      ? pool
+      : GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock);
+    if (!source.length) {
+      flash("Nie ma jeszcze z czego losować.");
+      return;
+    }
+    const pick = source[Math.floor(Math.random() * source.length)];
+    flash(`🎲 Wylosowano: ${pick.name}`);
+    startGame(pick.id);
   }
 
   async function onFinish(gameId: string) {
@@ -195,7 +180,6 @@ export function MatchRoom({
           (res.unlocked.length ? ` · Odblokowano: ${res.unlocked.join(", ")} 🔓` : ""),
       );
     }
-    setTab("rozmowa");
   }
 
   if (active) {
@@ -212,191 +196,113 @@ export function MatchRoom({
     );
   }
 
+  const randomRow = rowFor(RANDOM_ID);
+  const randomBoth = !!randomRow?.a_wants && !!randomRow?.b_wants;
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center gap-3 border-b border-line pb-3">
-        <Link href="/matches" className="text-lg text-inksoft" aria-label="Wróć">
+    <div className="flex h-[100dvh] flex-col">
+      {/* nagłówek */}
+      <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
+        <Link href="/matches" className="text-xl text-inksoft" aria-label="Wróć">
           ‹
         </Link>
-        <div className="h-10 w-10 overflow-hidden rounded-full">
-          <Avatar spec={other?.avatar ?? DEFAULT_AVATAR} className="h-full w-full" />
-        </div>
-        <div className="flex-1">
-          <div className="font-bold leading-tight">{otherName}</div>
-          {otherOnline ? (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-berry">
-              <span className="h-2 w-2 rounded-full bg-[#8FE3C2]" />
-              jest teraz z Tobą — możecie grać
-            </div>
-          ) : (
-            <div className="text-xs text-inksoft">
-              offline — zaznacz grę, zobaczy ją po wejściu
-            </div>
+        <div className="relative h-11 w-11 shrink-0">
+          <div className="h-full w-full overflow-hidden rounded-full">
+            <Avatar spec={other?.avatar ?? DEFAULT_AVATAR} className="h-full w-full" />
+          </div>
+          {otherOnline && (
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#8FE3C2]" />
           )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-bold leading-tight">{otherName}</div>
+          <div className="text-xs text-inksoft">
+            {otherOnline ? (
+              <span className="font-semibold text-berry">jest teraz online</span>
+            ) : (
+              "offline — zaproszenie poczeka"
+            )}
+          </div>
         </div>
         <span className="rounded-full bg-gold/15 px-3 py-1 font-mono text-xs font-bold text-gold">
           ✨ {points}
         </span>
       </header>
 
-      <nav className="mt-3 flex gap-2">
-        {(["gry", "rozmowa"] as const).map((t) => (
+      {/* rozmowa */}
+      <Stream
+        messages={messages}
+        meId={meId}
+        otherName={otherName}
+        locked={!playedAny}
+        onOpenGames={() => setSheet(true)}
+        onRandom={drawRandom}
+      />
+
+      {/* pasek gier + pole wiadomości */}
+      <div className="flex-none border-t border-line pt-2">
+        <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold capitalize transition ${
-              tab === t
-                ? "bg-coral text-[#06281A]"
-                : "border border-line bg-surface text-inksoft"
+            onClick={drawRandom}
+            className={`flex-none rounded-full px-3 py-1.5 text-xs font-bold transition ${
+              randomBoth
+                ? "bg-[#8FE3C2] text-[#06281A]"
+                : "border border-line bg-surface text-ink"
             }`}
           >
-            {t === "gry" ? "Gry" : "Rozmowa"}
+            🎲 Losuj grę
           </button>
-        ))}
-      </nav>
-
-      {tab === "gry" ? (
-        <section className="mt-4 flex flex-col gap-2 pb-24">
-          <div>
-            <h1 className="font-display text-xl font-extrabold">Wybierzcie grę — razem</h1>
-            <p className="text-sm text-inksoft">
-              Gra startuje, gdy oboje zaznaczycie to samo. Punkty odblokowują głębsze gry.
-            </p>
-          </div>
-
-          {/* Losowanie — dla par, którym nie chce się wybierać. Też wymaga zgody obojga. */}
-          {(() => {
-            const row = rowFor(RANDOM_ID);
-            const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
-            const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
-            const both = iWant && theyWant;
-            return (
-              <div
-                className={`mb-1 flex items-center gap-3 rounded-2xl border p-3 transition ${
-                  both
-                    ? "border-[#8FE3C2] bg-[#8FE3C2]/12"
-                    : "border-dashed border-line bg-surface"
-                }`}
-              >
-                <span className="text-2xl">🎲</span>
-                <button onClick={() => onToggle(RANDOM_ID)} className="flex-1 text-left">
-                  <div className="font-mono text-[10px] uppercase tracking-wide text-inksoft">
-                    Nie chce się wybierać?
-                  </div>
-                  <div className="font-bold leading-tight">Wylosujcie grę</div>
-                  <div className="text-xs text-inksoft">
-                    Apka wybierze coś z dostępnych — bez zastanawiania się.
-                  </div>
-                </button>
-                <div className="flex w-28 flex-col items-end gap-1">
-                  {both ? (
-                    <button
-                      onClick={drawRandom}
-                      className="rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]"
-                    >
-                      🎲 Losujcie
-                    </button>
-                  ) : (
-                    <>
-                      {theyWant && (
-                        <span className="rounded-full bg-berry/15 px-2 py-1 text-[11px] font-bold text-berry">
-                          {otherName} chce
-                        </span>
-                      )}
-                      {iWant && (
-                        <span className="rounded-full bg-coral/15 px-2 py-1 text-[11px] font-bold text-coraldeep">
-                          Ty ✓ czekasz
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {GAMES.map((g) => {
-            const row = rowFor(g.id);
-            const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
-            const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
-            const both = iWant && theyWant;
-            const locked = points < g.unlock;
-            const soon = !PLAYABLE.has(g.id);
-
-            return (
-              <div
-                key={g.id}
-                className={`flex items-center gap-3 rounded-2xl border p-3 transition ${
-                  both
-                    ? "border-[#8FE3C2] bg-[#8FE3C2]/12"
-                    : locked
-                      ? "border-dashed border-line opacity-60"
-                      : "border-line bg-surface"
-                }`}
-              >
-                <span className="text-2xl">{g.icon}</span>
+          <button
+            onClick={() => setSheet(true)}
+            className="flex-none rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold"
+          >
+            🎮 Wybierz grę
+          </button>
+          {GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock)
+            .slice(0, 3)
+            .map((g) => {
+              const row = rowFor(g.id);
+              const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
+              const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
+              const both = iWant && theyWant;
+              return (
                 <button
-                  onClick={() => onToggle(g.id)}
-                  className="flex-1 text-left"
-                  disabled={locked}
+                  key={g.id}
+                  onClick={() => (both ? startGame(g.id) : onToggle(g.id))}
+                  className={`flex-none rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                    both
+                      ? "bg-[#8FE3C2] text-[#06281A]"
+                      : iWant
+                        ? "border border-coral bg-coral/15 text-coraldeep"
+                        : theyWant
+                          ? "border border-berry bg-berry/15 text-berry"
+                          : "border border-line bg-surface text-inksoft"
+                  }`}
                 >
-                  <div className="font-mono text-[10px] uppercase tracking-wide text-inksoft">
-                    {g.tag} · ✨ +{g.pts}
-                  </div>
-                  <div className="font-bold leading-tight">{g.name}</div>
-                  <div className="text-xs text-inksoft">{g.desc}</div>
+                  {g.icon} {both ? "Zagrajcie!" : g.name}
                 </button>
+              );
+            })}
+        </div>
 
-                <div className="flex w-28 flex-col items-end gap-1">
-                  {locked ? (
-                    <span className="rounded-full bg-line px-2 py-1 text-[11px] text-inksoft">
-                      🔒 od {g.unlock} pkt
-                    </span>
-                  ) : both ? (
-                    <button
-                      onClick={() => startGame(g.id)}
-                      className="rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]"
-                    >
-                      ▶ Zagrajcie
-                    </button>
-                  ) : (
-                    <>
-                      {theyWant && (
-                        <span className="rounded-full bg-berry/15 px-2 py-1 text-[11px] font-bold text-berry">
-                          {otherName} chce
-                        </span>
-                      )}
-                      {iWant && (
-                        <span className="rounded-full bg-coral/15 px-2 py-1 text-[11px] font-bold text-coraldeep">
-                          Ty ✓ czekasz
-                        </span>
-                      )}
-                      {soon && !iWant && !theyWant && (
-                        <span className="text-[11px] text-inksoft">wkrótce</span>
-                      )}
-                    </>
-                  )}
-                  {row?.played && !both && (
-                    <span className="text-[11px] text-inksoft">zagrane ✓</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      ) : (
-        <Chat
-          matchId={matchId}
-          meId={meId}
-          messages={messages}
+        <Composer matchId={matchId} locked={!playedAny} onOpenGames={() => setSheet(true)} />
+      </div>
+
+      {sheet && (
+        <GameSheet
+          points={points}
+          isA={isA}
+          rows={rows}
           otherName={otherName}
-          locked={!playedAny}
-          onGoToGames={() => setTab("gry")}
+          onClose={() => setSheet(false)}
+          onToggle={onToggle}
+          onStart={startGame}
+          onRandom={drawRandom}
         />
       )}
 
       {toast && (
-        <div className="fixed inset-x-0 bottom-6 mx-auto w-[92%] max-w-sm rounded-2xl bg-ink px-4 py-3 text-center text-sm font-semibold text-bg shadow-xl">
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 mx-auto w-[92%] max-w-sm rounded-2xl bg-[#06281A] px-4 py-3 text-center text-sm font-semibold text-[#F2EFE4] shadow-xl">
           {toast}
         </div>
       )}
@@ -404,46 +310,116 @@ export function MatchRoom({
   );
 }
 
-/* ---------------------------------- CZAT --------------------------------- */
+/* -------------------------------- ROZMOWA -------------------------------- */
 
-function Chat({
-  matchId,
-  meId,
+function Stream({
   messages,
+  meId,
   otherName,
   locked,
-  onGoToGames,
+  onOpenGames,
+  onRandom,
 }: {
-  matchId: string;
-  meId: string;
   messages: Message[];
+  meId: string;
   otherName: string;
   locked: boolean;
-  onGoToGames: () => void;
+  onOpenGames: () => void;
+  onRandom: () => void;
 }) {
-  const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   if (locked) {
     return (
-      <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-coral/5 p-8 text-center">
-        <span className="text-2xl">🔒</span>
-        <p className="font-bold">Rozmowa jeszcze zamknięta</p>
-        <p className="max-w-xs text-sm text-inksoft">
-          Zamiast pustego „hej” — zagrajcie razem jedną grę. Wtedy czat się otworzy.
-        </p>
-        <button
-          onClick={onGoToGames}
-          className="mt-1 rounded-xl bg-coral px-5 py-2.5 font-bold text-[#06281A]"
-        >
-          Wybierzcie grę
-        </button>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface text-3xl">
+          🎮
+        </div>
+        <div>
+          <p className="font-display text-xl font-extrabold">Zacznijcie od gry</p>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-inksoft">
+            Rozmowa otworzy się, gdy zagracie razem — zamiast pustego „hej” będziecie
+            mieć o czym gadać.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onRandom}
+            className="rounded-xl bg-coral px-5 py-3 font-bold text-[#06281A]"
+          >
+            🎲 Wylosuj grę
+          </button>
+          <button
+            onClick={onOpenGames}
+            className="rounded-xl border border-line bg-surface px-5 py-3 font-bold"
+          >
+            Wybierz
+          </button>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col gap-2 overflow-y-auto py-4">
+      {messages.map((m) => {
+        if (m.body.startsWith("__system__")) {
+          return (
+            <div
+              key={m.id}
+              className="mx-auto rounded-full border border-line bg-surface px-3 py-1 text-center text-[11px] font-semibold text-gold"
+            >
+              {m.body.replace("__system__", "")}
+            </div>
+          );
+        }
+        const mine = m.sender === meId;
+        return (
+          <div
+            key={m.id}
+            className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-snug ${
+              mine
+                ? "self-end rounded-br-md bg-coral text-[#06281A]"
+                : "self-start rounded-bl-md border border-line bg-surface"
+            }`}
+          >
+            {!mine && (
+              <div className="mb-0.5 font-mono text-[10px] font-bold text-berry">
+                {otherName}
+              </div>
+            )}
+            {m.body}
+          </div>
+        );
+      })}
+      <div ref={endRef} />
+    </div>
+  );
+}
+
+function Composer({
+  matchId,
+  locked,
+  onOpenGames,
+}: {
+  matchId: string;
+  locked: boolean;
+  onOpenGames: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  if (locked) {
+    return (
+      <button
+        onClick={onOpenGames}
+        className="mb-2 flex w-full items-center gap-2 rounded-full border border-dashed border-line bg-surface px-4 py-3 text-sm text-inksoft"
+      >
+        🔒 Rozmowa otworzy się po pierwszej wspólnej grze
+      </button>
     );
   }
 
@@ -459,59 +435,148 @@ function Chat({
   }
 
   return (
-    <section className="mt-4 flex flex-1 flex-col pb-4">
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto pb-4">
-        {messages.map((m) => {
-          const system = m.body.startsWith("__system__");
-          if (system) {
+    <form onSubmit={submit} className="mb-2 flex gap-2">
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Napisz coś…"
+        className="flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
+      />
+      <button
+        type="submit"
+        disabled={sending}
+        aria-label="Wyślij"
+        className="h-11 w-11 flex-none rounded-full bg-coral text-[#06281A] disabled:opacity-50"
+      >
+        ➤
+      </button>
+    </form>
+  );
+}
+
+/* ------------------------------ WYBÓR GIER ------------------------------- */
+
+function GameSheet({
+  points,
+  isA,
+  rows,
+  otherName,
+  onClose,
+  onToggle,
+  onStart,
+  onRandom,
+}: {
+  points: number;
+  isA: boolean;
+  rows: MatchGame[];
+  otherName: string;
+  onClose: () => void;
+  onToggle: (id: string) => void;
+  onStart: (id: string) => void;
+  onRandom: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-end bg-black/50" onClick={onClose}>
+      <div
+        className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl border-t border-line bg-bg p-4 pb-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="font-display text-xl font-extrabold">Wybierzcie grę</h2>
+          <span className="font-mono text-xs text-gold">✨ {points} pkt</span>
+        </div>
+        <p className="mb-4 text-sm text-inksoft">
+          Gra startuje, gdy oboje zaznaczycie to samo.
+        </p>
+
+        <button
+          onClick={onRandom}
+          className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-line bg-surface p-3 text-left"
+        >
+          <span className="text-2xl">🎲</span>
+          <span className="flex-1">
+            <span className="block font-bold">Wylosujcie grę</span>
+            <span className="block text-xs text-inksoft">
+              Apka wybierze coś z dostępnych
+            </span>
+          </span>
+          <span className="rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-[#06281A]">
+            Losuj
+          </span>
+        </button>
+
+        <div className="flex flex-col gap-2">
+          {GAMES.map((g) => {
+            const row = rows.find((r) => r.game_id === g.id);
+            const iWant = isA ? !!row?.a_wants : !!row?.b_wants;
+            const theyWant = isA ? !!row?.b_wants : !!row?.a_wants;
+            const both = iWant && theyWant;
+            const locked = points < g.unlock;
+            const soon = !PLAYABLE.has(g.id);
+
             return (
               <div
-                key={m.id}
-                className="mx-auto rounded-full bg-line px-3 py-1 text-center text-xs text-inksoft"
+                key={g.id}
+                className={`flex items-center gap-3 rounded-2xl border p-3 ${
+                  both
+                    ? "border-[#8FE3C2] bg-[#8FE3C2]/12"
+                    : locked
+                      ? "border-dashed border-line opacity-60"
+                      : "border-line bg-surface"
+                }`}
               >
-                {m.body.replace("__system__", "")}
+                <span className="text-2xl">{g.icon}</span>
+                <button
+                  onClick={() => onToggle(g.id)}
+                  disabled={locked}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <div className="font-mono text-[10px] uppercase tracking-wide text-inksoft">
+                    {g.tag} · ✨ +{g.pts}
+                  </div>
+                  <div className="font-bold leading-tight">{g.name}</div>
+                  <div className="text-xs text-inksoft">{g.desc}</div>
+                </button>
+                <div className="flex w-24 flex-none flex-col items-end gap-1">
+                  {locked ? (
+                    <span className="rounded-full bg-line/40 px-2 py-1 text-[11px] text-inksoft">
+                      🔒 {g.unlock} pkt
+                    </span>
+                  ) : both ? (
+                    <button
+                      onClick={() => onStart(g.id)}
+                      className="rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]"
+                    >
+                      ▶ Start
+                    </button>
+                  ) : (
+                    <>
+                      {theyWant && (
+                        <span className="rounded-full bg-berry/15 px-2 py-1 text-center text-[10px] font-bold leading-tight text-berry">
+                          {otherName} chce
+                        </span>
+                      )}
+                      {iWant && (
+                        <span className="rounded-full bg-coral/15 px-2 py-1 text-[10px] font-bold text-coraldeep">
+                          Ty ✓
+                        </span>
+                      )}
+                      {soon && !iWant && !theyWant && (
+                        <span className="text-[10px] text-inksoft">wkrótce</span>
+                      )}
+                    </>
+                  )}
+                  {row?.played && !both && (
+                    <span className="text-[10px] text-inksoft">zagrane ✓</span>
+                  )}
+                </div>
               </div>
             );
-          }
-          const mine = m.sender === meId;
-          return (
-            <div
-              key={m.id}
-              className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
-                mine
-                  ? "self-end bg-coral text-[#06281A]"
-                  : "self-start border border-line bg-surface"
-              }`}
-            >
-              {!mine && (
-                <div className="mb-0.5 font-mono text-[10px] font-bold text-berry">
-                  {otherName}
-                </div>
-              )}
-              {m.body}
-            </div>
-          );
-        })}
-        <div ref={endRef} />
+          })}
+        </div>
       </div>
-
-      <form onSubmit={submit} className="flex gap-2 border-t border-line pt-3">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Napisz coś…"
-          className="flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
-        />
-        <button
-          type="submit"
-          disabled={sending}
-          aria-label="Wyślij"
-          className="h-11 w-11 rounded-full bg-coral text-[#06281A] disabled:opacity-50"
-        >
-          ➤
-        </button>
-      </form>
-    </section>
+    </div>
   );
 }
 
@@ -528,9 +593,9 @@ function GameScreen(props: {
 }) {
   const g = gameById(props.gameId);
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center gap-3 border-b border-line pb-3">
-        <button onClick={props.onExit} className="text-lg text-inksoft" aria-label="Wróć">
+    <div className="flex h-[100dvh] flex-col">
+      <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
+        <button onClick={props.onExit} className="text-xl text-inksoft" aria-label="Wróć">
           ‹
         </button>
         <div>
@@ -568,10 +633,9 @@ function RiddleGame({
 
   useEffect(() => {
     if (!channel) return;
-    const handler = ({ payload }: { payload: { answer?: string } }) => {
+    channel.on("broadcast", { event: "riddle" }, ({ payload }) => {
       if (payload?.answer === riddle.answer) setSolved(true);
-    };
-    channel.on("broadcast", { event: "riddle" }, handler);
+    });
   }, [channel, riddle.answer]);
 
   function pick(opt: string) {
@@ -585,7 +649,7 @@ function RiddleGame({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 py-4">
+    <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4">
       <div className="rounded-2xl border border-line bg-gold/10 p-4 text-sm">
         <b>Twoje wskazówki:</b> {myClue}
       </div>
@@ -613,7 +677,7 @@ function RiddleGame({
             <button
               key={o}
               onClick={() => pick(o)}
-              className={`rounded-2xl border border-line bg-surface p-4 font-semibold transition ${
+              className={`rounded-2xl border border-line bg-surface p-4 font-semibold transition active:scale-95 ${
                 wrong === o ? "opacity-40" : ""
               }`}
             >
@@ -657,17 +721,16 @@ function TicTacToe({
 
   useEffect(() => {
     if (!channel) return;
-    const handler = ({ payload }: { payload: { i?: number; sym?: string } }) => {
+    channel.on("broadcast", { event: "ttt" }, ({ payload }) => {
       if (typeof payload?.i !== "number" || !payload.sym) return;
       setCells((prev) => {
-        if (prev[payload.i!]) return prev;
+        if (prev[payload.i]) return prev;
         const next = [...prev];
-        next[payload.i!] = payload.sym!;
+        next[payload.i] = payload.sym;
         return next;
       });
       setMyTurn(true);
-    };
-    channel.on("broadcast", { event: "ttt" }, handler);
+    });
   }, [channel]);
 
   function play(i: number) {
@@ -701,7 +764,7 @@ function TicTacToe({
             key={i}
             onClick={() => play(i)}
             disabled={Boolean(c) || !myTurn || over}
-            className="grid aspect-square place-items-center rounded-2xl border border-line bg-surface text-3xl font-extrabold disabled:cursor-default"
+            className="grid aspect-square place-items-center rounded-2xl border border-line bg-surface text-3xl font-extrabold transition active:scale-95 disabled:cursor-default"
           >
             <span className={c === mySym ? "text-coral" : "text-berry"}>{c}</span>
           </button>
@@ -733,14 +796,14 @@ function DrawTogether({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
-  const myColor = isA ? "#E2543F" : "#7A459C";
+  const last = useRef<{ x: number; y: number } | null>(null);
+  const myColor = isA ? "#FF6B4A" : "#8FE3C2";
 
   const stroke = useCallback(
     (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
       const cv = canvasRef.current;
-      if (!cv) return;
-      const ctx = cv.getContext("2d");
-      if (!ctx) return;
+      const ctx = cv?.getContext("2d");
+      if (!cv || !ctx) return;
       ctx.strokeStyle = color;
       ctx.lineWidth = 4;
       ctx.lineCap = "round";
@@ -761,17 +824,13 @@ function DrawTogether({
 
   useEffect(() => {
     if (!channel) return;
-    const handler = ({ payload }: { payload: any }) => {
+    channel.on("broadcast", { event: "draw" }, ({ payload }) => {
       if (payload?.from && payload?.to) stroke(payload.from, payload.to, payload.color);
-    };
-    channel.on("broadcast", { event: "draw" }, handler);
+    });
   }, [channel, stroke]);
 
-  const last = useRef<{ x: number; y: number } | null>(null);
-
   function pos(e: React.PointerEvent) {
-    const cv = canvasRef.current!;
-    const r = cv.getBoundingClientRect();
+    const r = canvasRef.current!.getBoundingClientRect();
     return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
   }
 
@@ -805,7 +864,7 @@ function DrawTogether({
           drawing.current = false;
           last.current = null;
         }}
-        className="min-h-[320px] flex-1 touch-none rounded-2xl border border-line bg-white"
+        className="min-h-[300px] flex-1 touch-none rounded-2xl border border-line bg-[#06281A]"
       />
       <button
         onClick={onFinish}
