@@ -10,6 +10,7 @@ import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
 import { GameWheel } from "@/components/GameWheel";
+import { GameBar } from "@/components/GameBar";
 import { Riddle } from "@/components/games/Riddle";
 import { TicTacToe } from "@/components/games/TicTacToe";
 import { Charades } from "@/components/games/Charades";
@@ -211,6 +212,10 @@ export function MatchRoom({
     const r = rowFor(g.id);
     return isA ? r?.b_wants && !r?.a_wants : r?.a_wants && !r?.b_wants;
   });
+  const waiting = GAMES.find((g) => {
+    const r = rowFor(g.id);
+    return isA ? r?.a_wants && !r?.b_wants : r?.b_wants && !r?.a_wants;
+  });
 
   return (
     <div className="flex h-[100dvh] flex-col">
@@ -254,41 +259,16 @@ export function MatchRoom({
 
       {/* gotowa gra + pole wiadomości */}
       <div className="flex-none pt-1">
-        {ready && (
-          <button
-            onClick={() => startGame(ready.id)}
-            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-[#8FE3C2] bg-[#8FE3C2]/12 px-3 py-2.5 text-left transition active:scale-[0.99]"
-          >
-            <Icon name={ready.icon} className="h-5 w-5 flex-none text-berry" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold leading-tight">{ready.name}</span>
-              <span className="block text-[11px] text-inksoft">
-                oboje chcecie — możecie zaczynać
-              </span>
-            </span>
-            <span className="flex-none rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]">
-              Start
-            </span>
-          </button>
-        )}
-
-        {!ready && invited && (
-          <button
-            onClick={() => onToggle(invited.id)}
-            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-berry/50 bg-berry/10 px-3 py-2.5 text-left transition active:scale-[0.99]"
-          >
-            <Icon name={invited.icon} className="h-5 w-5 flex-none text-berry" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold leading-tight">{invited.name}</span>
-              <span className="block text-[11px] text-inksoft">
-                {otherName} czeka na Twoją zgodę
-              </span>
-            </span>
-            <span className="flex-none rounded-full border border-berry px-3 py-1.5 text-xs font-bold text-berry">
-              Wchodzę
-            </span>
-          </button>
-        )}
+        <GameBar
+          ready={ready ?? null}
+          invited={invited ?? null}
+          waiting={waiting ?? null}
+          otherName={otherName}
+          otherOnline={otherOnline}
+          onOpen={() => setSheet(true)}
+          onStart={startGame}
+          onToggle={onToggle}
+        />
 
         <Composer
           matchId={matchId}
@@ -552,34 +532,23 @@ function GameSheet({
                   <div className="font-bold leading-tight">{g.name}</div>
                   <div className="text-xs text-inksoft">{g.desc}</div>
                 </button>
-                <div className="flex w-24 flex-none flex-col items-end gap-1">
+                <div className="flex w-[86px] flex-none flex-col items-end gap-1.5">
                   {locked ? (
-                    <span className="rounded-full bg-line/40 px-2 py-1 text-[11px] text-inksoft">
-                      <Icon name="lock" className="inline h-3 w-3 align-[-1px]" /> {g.unlock} pkt
+                    <span className="flex items-center gap-1 rounded-full bg-line/40 px-2 py-1 text-[11px] text-inksoft">
+                      <Icon name="lock" className="h-3 w-3" /> {g.unlock}
                     </span>
                   ) : both ? (
                     <button
                       onClick={() => onStart(g.id)}
-                      className="rounded-full bg-[#8FE3C2] px-3 py-1.5 text-xs font-bold text-[#06281A]"
+                      className="rounded-full bg-[#8FE3C2] px-3.5 py-1.5 text-xs font-extrabold text-[#06281A]"
                     >
-                      ▶ Start
+                      START
                     </button>
                   ) : (
-                    <>
-                      {theyWant && (
-                        <span className="rounded-full bg-berry/15 px-2 py-1 text-center text-[10px] font-bold leading-tight text-berry">
-                          {otherName} chce
-                        </span>
-                      )}
-                      {iWant && (
-                        <span className="rounded-full bg-coral/15 px-2 py-1 text-[10px] font-bold text-coraldeep">
-                          Ty ✓
-                        </span>
-                      )}
-                      {soon && !iWant && !theyWant && (
-                        <span className="text-[10px] text-inksoft">wkrótce</span>
-                      )}
-                    </>
+                    <span className="flex flex-col items-end gap-0.5">
+                      <Dot label="Ty" on={iWant} />
+                      <Dot label={otherName} on={theyWant} />
+                    </span>
                   )}
                   {row?.played && !both && (
                     <span className="text-[10px] text-inksoft">zagrane ✓</span>
@@ -640,5 +609,25 @@ function GameScreen(props: {
       {props.gameId === "q36" && <Questions36 {...shared} />}
       {props.gameId === "escape" && <EscapeRoom {...shared} />}
     </div>
+  );
+}
+
+/** Kto już chce zagrać — czytelne bez czytania opisu. */
+function Dot({ label, on }: { label: string; on: boolean }) {
+  return (
+    <span
+      className={`flex items-center gap-1 text-[10px] font-bold ${
+        on ? "text-berry" : "text-inksoft/60"
+      }`}
+    >
+      <span
+        className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] ${
+          on ? "bg-[#8FE3C2] text-[#06281A]" : "border border-line"
+        }`}
+      >
+        {on ? "✓" : ""}
+      </span>
+      <span className="max-w-[52px] truncate">{label}</span>
+    </span>
   );
 }
