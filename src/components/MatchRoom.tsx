@@ -7,9 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { GAMES, gameById } from "@/lib/games";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
-import { riddleForMatch } from "@/lib/riddles";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
+import { Riddle } from "@/components/games/Riddle";
+import { TicTacToe } from "@/components/games/TicTacToe";
+import { Charades } from "@/components/games/Charades";
+import { Truths } from "@/components/games/Truths";
+import { Questions36 } from "@/components/games/Questions36";
+import { EscapeRoom } from "@/components/games/EscapeRoom";
 import { toggleWantGame, finishGame, sendMessage } from "@/app/matches/[id]/actions";
 
 type MatchGame = {
@@ -26,7 +31,7 @@ type Message = {
   created_at: string;
 };
 
-const PLAYABLE = new Set(["riddle", "ttt", "draw"]);
+const PLAYABLE = new Set(["riddle", "ttt", "draw", "truths", "q36", "escape"]);
 const RANDOM_ID = "__random__";
 
 export function MatchRoom({
@@ -593,286 +598,39 @@ function GameScreen(props: {
   onFinish: () => void;
 }) {
   const g = gameById(props.gameId);
+  const shared = {
+    matchId: props.matchId,
+    isA: props.isA,
+    otherName: props.otherName,
+    channel: props.channel,
+    onFinish: props.onFinish,
+  };
+
   return (
     <div className="flex h-[100dvh] flex-col">
       <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
         <button onClick={props.onExit} className="text-inksoft" aria-label="Wróć">
           <Icon name="back" className="h-6 w-6" />
         </button>
-        <div>
-          <div className="font-mono text-[10px] uppercase tracking-wide text-berry">
-            {g?.tag}
+        <div className="flex items-center gap-2.5">
+          {g && <Icon name={g.icon} className="h-6 w-6 text-coral" />}
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-wide text-berry">
+              {g?.tag}
+            </div>
+            <h2 className="font-display text-lg font-extrabold leading-tight">
+              {g?.name}
+            </h2>
           </div>
-          <h2 className="font-display text-lg font-extrabold leading-tight">{g?.name}</h2>
         </div>
       </header>
 
-      {props.gameId === "riddle" && <RiddleGame {...props} />}
-      {props.gameId === "ttt" && <TicTacToe {...props} />}
-      {props.gameId === "draw" && <DrawTogether {...props} />}
-    </div>
-  );
-}
-
-function RiddleGame({
-  matchId,
-  isA,
-  otherName,
-  channel,
-  onFinish,
-}: {
-  matchId: string;
-  isA: boolean;
-  otherName: string;
-  channel: RealtimeChannel | null;
-  onFinish: () => void;
-}) {
-  const riddle = useMemo(() => riddleForMatch(matchId), [matchId]);
-  const myClue = isA ? riddle.clueA : riddle.clueB;
-  const [solved, setSolved] = useState(false);
-  const [wrong, setWrong] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!channel) return;
-    channel.on("broadcast", { event: "riddle" }, ({ payload }) => {
-      if (payload?.answer === riddle.answer) setSolved(true);
-    });
-  }, [channel, riddle.answer]);
-
-  function pick(opt: string) {
-    if (opt === riddle.answer) {
-      setSolved(true);
-      channel?.send({ type: "broadcast", event: "riddle", payload: { answer: opt } });
-    } else {
-      setWrong(opt);
-      setTimeout(() => setWrong(null), 900);
-    }
-  }
-
-  return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4">
-      <div className="rounded-2xl border border-line bg-gold/10 p-4 text-sm">
-        <b>Twoje wskazówki:</b> {myClue}
-      </div>
-      <p className="text-sm text-inksoft">
-        {otherName} widzi <b>inne</b> wskazówki. Napiszcie do siebie i złóżcie je w całość.
-      </p>
-
-      {solved ? (
-        <div className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-[#8FE3C2] bg-[#8FE3C2]/12 p-6 text-center">
-          <Icon name="spark" className="h-9 w-9 text-gold" filled />
-          <p className="font-display text-lg font-extrabold">Rozwiązane razem!</p>
-          <p className="text-sm text-inksoft">
-            Bez wskazówek drugiej osoby by się nie udało.
-          </p>
-          <button
-            onClick={onFinish}
-            className="mt-1 rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
-          >
-            Odbierzcie punkty
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          {riddle.options.map((o) => (
-            <button
-              key={o}
-              onClick={() => pick(o)}
-              className={`rounded-2xl border border-line bg-surface p-4 font-semibold transition active:scale-95 ${
-                wrong === o ? "opacity-40" : ""
-              }`}
-            >
-              {o}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TicTacToe({
-  isA,
-  otherName,
-  channel,
-  onFinish,
-}: {
-  isA: boolean;
-  otherName: string;
-  channel: RealtimeChannel | null;
-  onFinish: () => void;
-}) {
-  const mySym = isA ? "O" : "X";
-  const theirSym = isA ? "X" : "O";
-  const [cells, setCells] = useState<(string | null)[]>(Array(9).fill(null));
-  const [myTurn, setMyTurn] = useState(isA);
-
-  const WINS = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6],
-  ];
-  const winner = WINS.map((w) =>
-    cells[w[0]] && cells[w[0]] === cells[w[1]] && cells[w[1]] === cells[w[2]]
-      ? cells[w[0]]
-      : null,
-  ).find(Boolean);
-  const full = cells.every(Boolean);
-  const over = Boolean(winner) || full;
-
-  useEffect(() => {
-    if (!channel) return;
-    channel.on("broadcast", { event: "ttt" }, ({ payload }) => {
-      if (typeof payload?.i !== "number" || !payload.sym) return;
-      setCells((prev) => {
-        if (prev[payload.i]) return prev;
-        const next = [...prev];
-        next[payload.i] = payload.sym;
-        return next;
-      });
-      setMyTurn(true);
-    });
-  }, [channel]);
-
-  function play(i: number) {
-    if (cells[i] || !myTurn || over) return;
-    setCells((prev) => {
-      const next = [...prev];
-      next[i] = mySym;
-      return next;
-    });
-    setMyTurn(false);
-    channel?.send({ type: "broadcast", event: "ttt", payload: { i, sym: mySym } });
-  }
-
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-5 py-6">
-      <p className="text-sm font-semibold text-inksoft">
-        {over
-          ? winner === mySym
-            ? "Wygrałeś!"
-            : winner
-              ? `${otherName} wygrywa 😄`
-              : "Remis 🤝"
-          : myTurn
-            ? `Twój ruch — grasz ${mySym}`
-            : `Ruch: ${otherName} (${theirSym})`}
-      </p>
-
-      <div className="grid w-64 grid-cols-3 gap-2">
-        {cells.map((c, i) => (
-          <button
-            key={i}
-            onClick={() => play(i)}
-            disabled={Boolean(c) || !myTurn || over}
-            className="grid aspect-square place-items-center rounded-2xl border border-line bg-surface text-3xl font-extrabold transition active:scale-95 disabled:cursor-default"
-          >
-            <span className={c === mySym ? "text-coral" : "text-berry"}>{c}</span>
-          </button>
-        ))}
-      </div>
-
-      {over && (
-        <button
-          onClick={onFinish}
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
-        >
-          Odbierzcie punkty
-        </button>
-      )}
-    </div>
-  );
-}
-
-function DrawTogether({
-  isA,
-  otherName,
-  channel,
-  onFinish,
-}: {
-  isA: boolean;
-  otherName: string;
-  channel: RealtimeChannel | null;
-  onFinish: () => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const drawing = useRef(false);
-  const last = useRef<{ x: number; y: number } | null>(null);
-  const myColor = isA ? "#FF6B4A" : "#8FE3C2";
-
-  const stroke = useCallback(
-    (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
-      const cv = canvasRef.current;
-      const ctx = cv?.getContext("2d");
-      if (!cv || !ctx) return;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 4;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(from.x * cv.width, from.y * cv.height);
-      ctx.lineTo(to.x * cv.width, to.y * cv.height);
-      ctx.stroke();
-    },
-    [],
-  );
-
-  useEffect(() => {
-    const cv = canvasRef.current;
-    if (!cv) return;
-    cv.width = cv.clientWidth;
-    cv.height = cv.clientHeight;
-  }, []);
-
-  useEffect(() => {
-    if (!channel) return;
-    channel.on("broadcast", { event: "draw" }, ({ payload }) => {
-      if (payload?.from && payload?.to) stroke(payload.from, payload.to, payload.color);
-    });
-  }, [channel, stroke]);
-
-  function pos(e: React.PointerEvent) {
-    const r = canvasRef.current!.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
-  }
-
-  return (
-    <div className="flex flex-1 flex-col gap-3 py-4">
-      <p className="text-sm text-inksoft">
-        Jedno płótno, dwie pary rąk — {otherName} rysuje razem z Tobą, na żywo.
-      </p>
-      <canvas
-        ref={canvasRef}
-        onPointerDown={(e) => {
-          drawing.current = true;
-          last.current = pos(e);
-        }}
-        onPointerMove={(e) => {
-          if (!drawing.current || !last.current) return;
-          const p = pos(e);
-          stroke(last.current, p, myColor);
-          channel?.send({
-            type: "broadcast",
-            event: "draw",
-            payload: { from: last.current, to: p, color: myColor },
-          });
-          last.current = p;
-        }}
-        onPointerUp={() => {
-          drawing.current = false;
-          last.current = null;
-        }}
-        onPointerLeave={() => {
-          drawing.current = false;
-          last.current = null;
-        }}
-        className="min-h-[300px] flex-1 touch-none rounded-2xl border border-line bg-[#06281A]"
-      />
-      <button
-        onClick={onFinish}
-        className="rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
-      >
-        Gotowe — odbierzcie punkty
-      </button>
+      {props.gameId === "riddle" && <Riddle {...shared} />}
+      {props.gameId === "ttt" && <TicTacToe {...shared} />}
+      {props.gameId === "draw" && <Charades {...shared} />}
+      {props.gameId === "truths" && <Truths {...shared} />}
+      {props.gameId === "q36" && <Questions36 {...shared} />}
+      {props.gameId === "escape" && <EscapeRoom {...shared} />}
     </div>
   );
 }

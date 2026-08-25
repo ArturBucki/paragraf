@@ -18,7 +18,7 @@ export const GAMES: Game[] = [
   { id: "ttt", icon: "grid", name: "Kółko i krzyżyk", desc: "Szybka rozgrywka na rozgrzewkę.", tag: "Rywalizacja", pts: 30, unlock: 0, kind: "versus" },
   { id: "truths", icon: "masks", name: "Dwie prawdy, jedno kłamstwo", desc: "Zgadnij, co zmyśliła druga osoba.", tag: "Poznajcie się", pts: 40, unlock: 0, kind: "social" },
   { id: "riddle", icon: "puzzle", name: "Zagadka we dwoje", desc: "Każde ma połowę wskazówek — złóżcie je.", tag: "Współpraca", pts: 60, unlock: 0, kind: "coop" },
-  { id: "draw", icon: "brush", name: "Wspólne rysowanie", desc: "Jedno płótno, dwie pary rąk.", tag: "Tworzenie", pts: 50, unlock: 60, kind: "create" },
+  { id: "draw", icon: "brush", name: "Kalambury", desc: "Jedno rysuje, drugie zgaduje — na żywo.", tag: "Zabawa", pts: 50, unlock: 60, kind: "create" },
   { id: "q36", icon: "chat", name: "36 pytań", desc: "Głębsze pytania, które zbliżają.", tag: "Bliskość", pts: 80, unlock: 150, kind: "social" },
   { id: "escape", icon: "key", name: "Escape room we dwoje", desc: "Rozszyfrujcie kod razem.", tag: "Współpraca+", pts: 100, unlock: 320, kind: "coop" },
 ];

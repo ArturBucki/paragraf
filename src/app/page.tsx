@@ -201,10 +201,10 @@ export default async function Home() {
 
           <div className="rounded-3xl bg-[#F2EFE4] p-7 text-[#0A3B2C]">
             {[
-              { pkt: "0", txt: "Kółko i krzyżyk, zagadka we dwoje", open: true },
-              { pkt: "60", txt: "Wspólne rysowanie", open: true },
-              { pkt: "150", txt: "36 pytań, które zbliżają", open: false },
-              { pkt: "320", txt: "Escape room we dwoje", open: false },
+              { pkt: "0", txt: "Kółko i krzyżyk, zagadka, dwie prawdy", open: true },
+              { pkt: "60", txt: "Kalambury — rysuj i zgaduj", open: true },
+              { pkt: "150", txt: "36 pytań, które zbliżają", open: true },
+              { pkt: "320", txt: "Escape room we dwoje", open: true },
             ].map((r, i) => (
               <div
                 key={r.pkt}
