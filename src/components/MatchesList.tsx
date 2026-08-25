@@ -5,6 +5,7 @@ import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { usePresence } from "@/lib/usePresence";
 import { gameById } from "@/lib/games";
+import { Icon } from "@/components/Icon";
 
 export type MatchRow = {
   id: string;
@@ -80,7 +81,7 @@ export function MatchesList({
                     </div>
                     {m.waitingGame && (
                       <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full border-2 border-bg bg-coral text-[11px]">
-                        🎮
+                        <Icon name="gamepad" className="h-3.5 w-3.5" />
                       </span>
                     )}
                   </div>
@@ -132,12 +133,12 @@ export function MatchesList({
                         {p?.name ?? "Ktoś"}
                       </span>
                       <span className="ml-auto flex-none font-mono text-[10px] text-gold">
-                        ✨ {m.points}
+                        <Icon name="spark" className="inline h-3 w-3 align-[-1px]" /> {m.points}
                       </span>
                     </div>
                     {g ? (
                       <div className="truncate text-xs font-semibold text-berry">
-                        chce zagrać: {g.icon} {g.name}
+                        chce zagrać: <Icon name={g.icon} className="inline h-3.5 w-3.5 align-[-2px]" /> {g.name}
                       </div>
                     ) : (
                       <div className="truncate text-xs text-inksoft">

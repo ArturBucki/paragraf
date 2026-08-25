@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import { GAMES } from "@/lib/games";
+import { Icon } from "@/components/Icon";
 import { saveProfile } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default async function Onboarding() {
                     defaultChecked={checked}
                     className="accent-coral"
                   />
-                  <span className="text-xl">{g.icon}</span>
+                  <Icon name={g.icon} className="h-5 w-5 text-inksoft" />
                   <span className="font-semibold">{g.name}</span>
                 </label>
               );

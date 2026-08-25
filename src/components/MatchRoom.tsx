@@ -9,6 +9,7 @@ import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { riddleForMatch } from "@/lib/riddles";
 import { usePresence } from "@/lib/usePresence";
+import { Icon } from "@/components/Icon";
 import { toggleWantGame, finishGame, sendMessage } from "@/app/matches/[id]/actions";
 
 type MatchGame = {
@@ -132,7 +133,7 @@ export function MatchRoom({
       const g = gameById(gameId);
       if (!g) return;
       if (points < g.unlock) {
-        flash(`🔒 „${g.name}" odblokujecie przy ${g.unlock} pkt.`);
+        flash(`Zablokowane — „${g.name}" odblokujecie przy ${g.unlock} pkt.`);
         return;
       }
       if (!PLAYABLE.has(gameId)) {
@@ -166,7 +167,7 @@ export function MatchRoom({
       return;
     }
     const pick = source[Math.floor(Math.random() * source.length)];
-    flash(`🎲 Wylosowano: ${pick.name}`);
+    flash(`Wylosowano: ${pick.name}`);
     startGame(pick.id);
   }
 
@@ -177,7 +178,7 @@ export function MatchRoom({
       setPoints(res.points);
       flash(
         `+${res.awarded} pkt połączenia` +
-          (res.unlocked.length ? ` · Odblokowano: ${res.unlocked.join(", ")} 🔓` : ""),
+          (res.unlocked.length ? ` · Odblokowano: ${res.unlocked.join(", ")}` : ""),
       );
     }
   }
@@ -203,8 +204,8 @@ export function MatchRoom({
     <div className="flex h-[100dvh] flex-col">
       {/* nagłówek */}
       <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
-        <Link href="/matches" className="text-xl text-inksoft" aria-label="Wróć">
-          ‹
+        <Link href="/matches" className="text-inksoft" aria-label="Wróć">
+          <Icon name="back" className="h-6 w-6" />
         </Link>
         <div className="relative h-11 w-11 shrink-0">
           <div className="h-full w-full overflow-hidden rounded-full">
@@ -225,7 +226,7 @@ export function MatchRoom({
           </div>
         </div>
         <span className="rounded-full bg-gold/15 px-3 py-1 font-mono text-xs font-bold text-gold">
-          ✨ {points}
+          <Icon name="spark" className="inline h-3 w-3 align-[-1px]" /> {points}
         </span>
       </header>
 
@@ -250,13 +251,13 @@ export function MatchRoom({
                 : "border border-line bg-surface text-ink"
             }`}
           >
-            🎲 Losuj grę
+            <span className="flex items-center gap-1.5"><Icon name="dice" className="h-4 w-4" /> Losuj grę</span>
           </button>
           <button
             onClick={() => setSheet(true)}
             className="flex-none rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-bold"
           >
-            🎮 Wybierz grę
+            <span className="flex items-center gap-1.5"><Icon name="gamepad" className="h-4 w-4" /> Wybierz grę</span>
           </button>
           {GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock)
             .slice(0, 3)
@@ -279,7 +280,7 @@ export function MatchRoom({
                           : "border border-line bg-surface text-inksoft"
                   }`}
                 >
-                  {g.icon} {both ? "Zagrajcie!" : g.name}
+                  <span className="flex items-center gap-1.5"><Icon name={g.icon} className="h-4 w-4" /> {both ? "Zagrajcie!" : g.name}</span>
                 </button>
               );
             })}
@@ -336,7 +337,7 @@ function Stream({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface text-3xl">
-          🎮
+          <Icon name="gamepad" className="h-8 w-8 text-coral" />
         </div>
         <div>
           <p className="font-display text-xl font-extrabold">Zacznijcie od gry</p>
@@ -350,7 +351,7 @@ function Stream({
             onClick={onRandom}
             className="rounded-xl bg-coral px-5 py-3 font-bold text-[#06281A]"
           >
-            🎲 Wylosuj grę
+            <span className="flex items-center gap-2"><Icon name="dice" className="h-5 w-5" /> Wylosuj grę</span>
           </button>
           <button
             onClick={onOpenGames}
@@ -418,7 +419,7 @@ function Composer({
         onClick={onOpenGames}
         className="mb-2 flex w-full items-center gap-2 rounded-full border border-dashed border-line bg-surface px-4 py-3 text-sm text-inksoft"
       >
-        🔒 Rozmowa otworzy się po pierwszej wspólnej grze
+        <Icon name="lock" className="h-4 w-4" /> Rozmowa otworzy się po pierwszej wspólnej grze
       </button>
     );
   }
@@ -448,7 +449,7 @@ function Composer({
         aria-label="Wyślij"
         className="h-11 w-11 flex-none rounded-full bg-coral text-[#06281A] disabled:opacity-50"
       >
-        ➤
+        <Icon name="send" className="mx-auto h-5 w-5" filled />
       </button>
     </form>
   );
@@ -484,7 +485,7 @@ function GameSheet({
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="font-display text-xl font-extrabold">Wybierzcie grę</h2>
-          <span className="font-mono text-xs text-gold">✨ {points} pkt</span>
+          <span className="flex items-center gap-1 font-mono text-xs text-gold"><Icon name="spark" className="h-3.5 w-3.5" /> {points} pkt</span>
         </div>
         <p className="mb-4 text-sm text-inksoft">
           Gra startuje, gdy oboje zaznaczycie to samo.
@@ -494,7 +495,7 @@ function GameSheet({
           onClick={onRandom}
           className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-line bg-surface p-3 text-left"
         >
-          <span className="text-2xl">🎲</span>
+          <Icon name="dice" className="h-7 w-7 flex-none text-coral" />
           <span className="flex-1">
             <span className="block font-bold">Wylosujcie grę</span>
             <span className="block text-xs text-inksoft">
@@ -526,14 +527,14 @@ function GameSheet({
                       : "border-line bg-surface"
                 }`}
               >
-                <span className="text-2xl">{g.icon}</span>
+                <Icon name={g.icon} className="h-7 w-7 flex-none text-inksoft" />
                 <button
                   onClick={() => onToggle(g.id)}
                   disabled={locked}
                   className="min-w-0 flex-1 text-left"
                 >
                   <div className="font-mono text-[10px] uppercase tracking-wide text-inksoft">
-                    {g.tag} · ✨ +{g.pts}
+                    {g.tag} · +{g.pts} pkt
                   </div>
                   <div className="font-bold leading-tight">{g.name}</div>
                   <div className="text-xs text-inksoft">{g.desc}</div>
@@ -541,7 +542,7 @@ function GameSheet({
                 <div className="flex w-24 flex-none flex-col items-end gap-1">
                   {locked ? (
                     <span className="rounded-full bg-line/40 px-2 py-1 text-[11px] text-inksoft">
-                      🔒 {g.unlock} pkt
+                      <Icon name="lock" className="inline h-3 w-3 align-[-1px]" /> {g.unlock} pkt
                     </span>
                   ) : both ? (
                     <button
@@ -595,8 +596,8 @@ function GameScreen(props: {
   return (
     <div className="flex h-[100dvh] flex-col">
       <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
-        <button onClick={props.onExit} className="text-xl text-inksoft" aria-label="Wróć">
-          ‹
+        <button onClick={props.onExit} className="text-inksoft" aria-label="Wróć">
+          <Icon name="back" className="h-6 w-6" />
         </button>
         <div>
           <div className="font-mono text-[10px] uppercase tracking-wide text-berry">
@@ -659,7 +660,7 @@ function RiddleGame({
 
       {solved ? (
         <div className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-[#8FE3C2] bg-[#8FE3C2]/12 p-6 text-center">
-          <div className="text-3xl">🎉</div>
+          <Icon name="spark" className="h-9 w-9 text-gold" filled />
           <p className="font-display text-lg font-extrabold">Rozwiązane razem!</p>
           <p className="text-sm text-inksoft">
             Bez wskazówek drugiej osoby by się nie udało.
@@ -701,8 +702,8 @@ function TicTacToe({
   channel: RealtimeChannel | null;
   onFinish: () => void;
 }) {
-  const mySym = isA ? "♥" : "✕";
-  const theirSym = isA ? "✕" : "♥";
+  const mySym = isA ? "O" : "X";
+  const theirSym = isA ? "X" : "O";
   const [cells, setCells] = useState<(string | null)[]>(Array(9).fill(null));
   const [myTurn, setMyTurn] = useState(isA);
 
@@ -749,7 +750,7 @@ function TicTacToe({
       <p className="text-sm font-semibold text-inksoft">
         {over
           ? winner === mySym
-            ? "Wygrałeś! 🎉"
+            ? "Wygrałeś!"
             : winner
               ? `${otherName} wygrywa 😄`
               : "Remis 🤝"

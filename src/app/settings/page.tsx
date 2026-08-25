@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import { GAMES } from "@/lib/games";
+import { Icon } from "@/components/Icon";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { BottomNav } from "@/components/BottomNav";
 import { updateProfile, rerollAvatar, signOut } from "./actions";
@@ -49,7 +50,7 @@ export default async function Settings({
           </div>
           <form action={rerollAvatar}>
             <button className="rounded-full border border-line px-3 py-2 text-xs font-bold">
-              🎲 Wygląd
+              <span className="flex items-center gap-1.5"><Icon name="dice" className="h-4 w-4" /> Wygląd</span>
             </button>
           </form>
         </section>
@@ -121,7 +122,7 @@ export default async function Settings({
                     defaultChecked={profile?.games?.includes(g.id) ?? false}
                     className="h-4 w-4 accent-[#FF6B4A]"
                   />
-                  <span className="text-xl">{g.icon}</span>
+                  <Icon name={g.icon} className="h-5 w-5 text-inksoft" />
                   <span className="flex-1 font-semibold">{g.name}</span>
                   <span className="font-mono text-[10px] text-gold">+{g.pts}</span>
                 </label>

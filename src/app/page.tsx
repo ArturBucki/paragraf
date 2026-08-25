@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/supabase/server";
 import { GAMES } from "@/lib/games";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -164,7 +165,7 @@ export default async function Home() {
                 key={g.id}
                 className="flex items-start gap-3 rounded-2xl border border-[#F2EFE4]/12 bg-[#F2EFE4]/[0.04] p-5"
               >
-                <span className="text-2xl leading-none">{g.icon}</span>
+                <Icon name={g.icon} className="h-6 w-6 flex-none text-[#FF6B4A]" />
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#FF6B4A]">
                     {g.tag} · +{g.pts}
@@ -215,7 +216,7 @@ export default async function Home() {
                   {r.pkt} pkt
                 </span>
                 <span className="flex-1 text-sm font-semibold">{r.txt}</span>
-                <span className="text-sm">{r.open ? "✨" : "🔒"}</span>
+                <Icon name={r.open ? "spark" : "lock"} className="h-4 w-4" />
               </div>
             ))}
           </div>

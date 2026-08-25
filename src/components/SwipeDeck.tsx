@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
 import { gameById } from "@/lib/games";
+import { Icon } from "@/components/Icon";
 import { likeProfile, passProfile } from "@/app/actions";
 
 export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
@@ -97,7 +98,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
                     key={gid}
                     className="rounded-full bg-[#F2EFE4] px-2 py-1 text-xs font-bold text-[#06281A]"
                   >
-                    {g.icon} {g.name}
+                    <Icon name={g.icon} className="h-3.5 w-3.5" /> {g.name}
                   </span>
                 );
               })}
@@ -112,14 +113,14 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           aria-label="Pomiń"
           className="grid h-16 w-16 place-items-center rounded-full border border-line bg-surface text-2xl text-inksoft"
         >
-          ✕
+          <Icon name="close" className="h-6 w-6" />
         </button>
         <button
           onClick={onLike}
           aria-label="Polub"
           className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[#06281A]"
         >
-          ♥
+          <Icon name="heart" className="h-7 w-7" filled />
         </button>
       </div>
     </div>
