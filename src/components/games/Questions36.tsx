@@ -90,7 +90,7 @@ export function Questions36({ otherName, channel, onFinish }: GameProps) {
               {e.q}
             </div>
             {e.mine && (
-              <div className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-coral px-3.5 py-2.5 text-sm text-[#06281A]">
+              <div className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-coral px-3.5 py-2.5 text-sm text-[#14211C]">
                 {e.mine}
               </div>
             )}
@@ -127,7 +127,7 @@ export function Questions36({ otherName, channel, onFinish }: GameProps) {
           />
           <button
             type="submit"
-            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[#06281A]"
+            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[#14211C]"
           >
             Wyślij
           </button>

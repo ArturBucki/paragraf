@@ -77,7 +77,7 @@ export function TicTacToe({ isA, otherName, channel, onFinish }: GameProps) {
       {over && (
         <button
           onClick={onFinish}
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
+          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#14211C]"
         >
           Odbierzcie punkty
         </button>

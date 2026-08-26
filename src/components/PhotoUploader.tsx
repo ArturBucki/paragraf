@@ -112,7 +112,7 @@ export function PhotoUploader({
             <img src={url} alt="" className="h-full w-full object-cover" />
 
             {i === 0 ? (
-              <span className="absolute left-1.5 top-1.5 rounded-full bg-coral px-2 py-0.5 text-[9px] font-extrabold text-[#06281A]">
+              <span className="absolute left-1.5 top-1.5 rounded-full bg-coral px-2 py-0.5 text-[9px] font-extrabold text-[#14211C]">
                 GŁÓWNE
               </span>
             ) : (

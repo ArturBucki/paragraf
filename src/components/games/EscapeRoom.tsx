@@ -56,7 +56,7 @@ export function EscapeRoom({ isA, otherName, channel, onFinish }: GameProps) {
           <div
             key={i}
             className={`h-1.5 flex-1 rounded-full ${
-              i < step ? "bg-[#8FE3C2]" : "bg-line"
+              i < step ? "bg-[#6FD3A6]" : "bg-line"
             }`}
           />
         ))}

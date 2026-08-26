@@ -111,7 +111,7 @@ export default async function Settings({
         </section>
 
         {searchParams.zapisano && (
-          <p className="rounded-xl border border-[#8FE3C2] bg-[#8FE3C2]/12 px-4 py-2.5 text-sm font-semibold text-berry">
+          <p className="rounded-xl border border-[#6FD3A6] bg-[#6FD3A6]/12 px-4 py-2.5 text-sm font-semibold text-berry">
             Zapisano zmiany ✓
           </p>
         )}
@@ -184,7 +184,7 @@ export default async function Settings({
                 name="zodiac"
                 options={ZODIAC}
                 value={profile?.zodiac ?? null}
-                accent="#F5C86B"
+                accent="#C8A96A"
               />
             </Pick>
           </Section>
@@ -233,7 +233,7 @@ export default async function Settings({
                 options={LANGUAGES}
                 value={profile?.languages ?? []}
                 max={MAX_LANGUAGES}
-                accent="#7FD8E8"
+                accent="#7FB0BF"
               />
             </Pick>
           </Section>
@@ -259,7 +259,7 @@ export default async function Settings({
                 options={ORIENTATIONS}
                 value={profile?.orientation ?? []}
                 max={MAX_ORIENTATION}
-                accent="#C299E6"
+                accent="#9BA8D4"
               />
             </Pick>
 
@@ -268,7 +268,7 @@ export default async function Settings({
                 name="interested_in"
                 options={INTERESTED_IN}
                 value={profile?.interested_in ?? null}
-                accent="#8FE3C2"
+                accent="#6FD3A6"
               />
             </Pick>
 
@@ -293,7 +293,7 @@ export default async function Settings({
                 name="drinking"
                 options={DRINKING}
                 value={profile?.drinking ?? null}
-                accent="#FF9F6B"
+                accent="#D98A63"
               />
             </Pick>
             <Pick label="Papierosy">
@@ -301,7 +301,7 @@ export default async function Settings({
                 name="smoking"
                 options={SMOKING}
                 value={profile?.smoking ?? null}
-                accent="#FF9F6B"
+                accent="#D98A63"
               />
             </Pick>
             <Pick label="Sport">
@@ -309,7 +309,7 @@ export default async function Settings({
                 name="workout"
                 options={WORKOUT}
                 value={profile?.workout ?? null}
-                accent="#8FE3C2"
+                accent="#6FD3A6"
               />
             </Pick>
             <Pick label="Zwierzaki">
@@ -317,7 +317,7 @@ export default async function Settings({
                 name="pets"
                 options={PETS}
                 value={profile?.pets ?? null}
-                accent="#7FD8E8"
+                accent="#7FB0BF"
               />
             </Pick>
             <Pick label="Dzieci">
@@ -325,7 +325,7 @@ export default async function Settings({
                 name="kids"
                 options={KIDS}
                 value={profile?.kids ?? null}
-                accent="#C299E6"
+                accent="#9BA8D4"
               />
             </Pick>
           </Section>
@@ -345,7 +345,7 @@ export default async function Settings({
 
           <button
             type="submit"
-            className="sticky bottom-24 z-10 rounded-xl bg-coral px-4 py-3.5 font-bold text-[#06281A] shadow-lg transition active:scale-[0.99]"
+            className="sticky bottom-24 z-10 rounded-xl bg-coral px-4 py-3.5 font-bold text-[#14211C] shadow-lg transition active:scale-[0.99]"
           >
             Zapisz zmiany
           </button>

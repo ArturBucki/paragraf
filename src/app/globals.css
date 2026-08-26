@@ -5,31 +5,35 @@
 @tailwind utilities;
 
 /*
- * Jedna paleta dla landingu i całej apki — 70/20/10:
- *  70%  butelkowa zieleń  — grunt
- *  20%  ciepły kremowy    — treść
- *  10%  koral             — akcent (tylko akcje i to, co ma przyciągnąć wzrok)
+ * Paleta 70/20/10 — spokojna, matowa, jeden akcent.
  *
- * Apka celowo trzyma jeden, ciemny wariant — spójny z landingiem.
+ *  70%  #0F1A16  grunt        — głęboka, wygaszona zieleń (prawie czerń)
+ *  20%  #17241F  powierzchnie — karty, bąbelki, pola; plus jasny tekst
+ *  10%  #FF7A5C  koral        — WYŁĄCZNIE akcje i to, co ma przyciągnąć wzrok
+ *
+ * Mięta jest zarezerwowana dla stanu (online, gotowe, zweryfikowany),
+ * piaskowy dla punktów. Kolory gier są celowo wygaszone i zestrojone —
+ * mają odróżniać gry, a nie krzyczeć.
  */
 :root {
-  --bg: #0a3b2c;
-  --surface: #12543f;
-  --surface-2: #07301f;
-  --ink: #f2efe4;
-  --ink-soft: #b6c6ba;
-  --line: #3a8a70;
-  --coral: #ff6b4a;
-  --coral-deep: #ff8f76;
-  --berry: #8fe3c2;
-  --gold: #f5c86b;
-  --on-coral: #06281a;
+  /* Kanały RGB, nie hexy — dzięki temu działa przezroczystość (bg-coral/20). */
+  --bg: 17 28 24; /* #111C18 */
+  --surface: 26 40 35; /* #1A2823 */
+  --surface-2: 35 51 44; /* #23332C */
+  --ink: 236 241 237; /* #ECF1ED */
+  --ink-soft: 147 167 156; /* #93A79C */
+  --line: 51 71 62; /* #33473E */
+  --coral: 255 122 92; /* #FF7A5C */
+  --coral-deep: 255 157 133; /* #FF9D85 */
+  --berry: 111 211 166; /* #6FD3A6 */
+  --gold: 200 169 106; /* #C8A96A */
+  --on-coral: 20 33 28; /* #14211C */
 }
 
 html,
 body {
-  background: var(--bg);
-  color: var(--ink);
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
   font-family: "Hanken Grotesk", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -39,24 +43,24 @@ body {
 }
 
 ::selection {
-  background: var(--coral);
-  color: var(--on-coral);
+  background: rgb(var(--coral));
+  color: rgb(var(--on-coral));
 }
 
 /* Widoczny focus — dostępność klawiatury. */
 :where(a, button, input, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--coral);
+  outline: 2px solid rgb(var(--coral));
   outline-offset: 2px;
 }
 
 input,
 textarea {
-  color: var(--ink);
+  color: rgb(var(--ink));
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--ink-soft);
+  color: rgb(var(--ink-soft));
   opacity: 0.75;
 }
 
@@ -73,23 +77,23 @@ textarea::placeholder {
 .input {
   width: 100%;
   border-radius: 0.75rem;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--surface));
   padding: 0.75rem 0.875rem;
   font-size: 0.95rem;
   line-height: 1.4;
-  color: var(--ink);
+  color: rgb(var(--ink));
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .input:hover {
-  border-color: var(--coral-deep);
+  border-color: rgb(var(--coral-deep));
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--coral);
-  background: var(--surface-2);
+  border-color: rgb(var(--coral));
+  background: rgb(var(--surface-2));
 }
 
 textarea.input {

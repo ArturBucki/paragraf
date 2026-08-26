@@ -52,7 +52,7 @@ const RANDOM_GAME: Game = {
   desc: "Koło wybierze za Was.",
   tag: "Losowanie",
   time: "chwila",
-  accent: "#F5C86B",
+  accent: "#C8A96A",
   pts: 0,
   unlock: 0,
   kind: "coop",
@@ -351,7 +351,7 @@ export function MatchRoom({
   return (
     <div className="flex h-[100dvh] flex-col">
       {/* nagłówek */}
-      <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
+      <header className="flex flex-none items-center gap-3 border-b border-line/70 pb-3">
         <Link href="/matches" className="text-inksoft" aria-label="Wróć">
           <Icon name="back" className="h-6 w-6" />
         </Link>
@@ -364,7 +364,7 @@ export function MatchRoom({
             <ProfilePhoto profile={other ?? null} />
           </div>
           {otherOnline && (
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#8FE3C2]" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#6FD3A6]" />
           )}
         </Link>
         <Link href={other ? `/profil/${other.id}` : "#"} className="min-w-0 flex-1">
@@ -380,8 +380,8 @@ export function MatchRoom({
             )}
           </div>
         </Link>
-        <span className="rounded-full bg-gold/15 px-3 py-1 font-mono text-xs font-bold text-gold">
-          <Icon name="spark" className="inline h-3 w-3 align-[-1px]" /> {points}
+        <span className="flex flex-none items-center gap-1 font-mono text-xs font-bold text-gold">
+          <Icon name="spark" className="h-3.5 w-3.5" /> {points}
         </span>
       </header>
 
@@ -507,7 +507,7 @@ export function MatchRoom({
       )}
 
       {toast && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 mx-auto w-[92%] max-w-sm rounded-2xl bg-[#06281A] px-4 py-3 text-center text-sm font-semibold text-[#F2EFE4] shadow-xl">
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 mx-auto w-[92%] max-w-sm rounded-2xl bg-surface2 px-4 py-3 text-center text-sm font-semibold text-ink shadow-2xl">
           {toast}
         </div>
       )}
@@ -553,7 +553,7 @@ function Stream({
         <div className="flex gap-2">
           <button
             onClick={onRandom}
-            className="rounded-xl bg-coral px-5 py-3 font-bold text-[#06281A]"
+            className="rounded-xl bg-coral px-5 py-3 font-bold text-[#14211C]"
           >
             <span className="flex items-center gap-2"><Icon name="dice" className="h-5 w-5" /> Wylosuj grę</span>
           </button>
@@ -568,35 +568,58 @@ function Stream({
     );
   }
 
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
+        <p className="text-sm font-semibold">Rozmowa otwarta</p>
+        <p className="max-w-[16rem] text-sm text-inksoft">
+          Po wspólnej grze zawsze jest o czym zacząć — napisz pierwsze zdanie.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-2 overflow-y-auto py-4">
-      {messages.map((m) => {
+    <div className="flex flex-1 flex-col justify-end overflow-y-auto py-3">
+      {messages.map((m, i) => {
         if (m.body.startsWith("__system__")) {
           return (
-            <div
-              key={m.id}
-              className="mx-auto rounded-full border border-line bg-surface px-3 py-1 text-center text-[11px] font-semibold text-gold"
-            >
-              {m.body.replace("__system__", "")}
+            <div key={m.id} className="my-3 flex items-center gap-3 px-2">
+              <span className="h-px flex-1 bg-line" />
+              <span className="text-center text-[11px] text-inksoft">
+                {m.body.replace("__system__", "")}
+              </span>
+              <span className="h-px flex-1 bg-line" />
             </div>
           );
         }
+
         const mine = m.sender === meId;
+        const prev = messages[i - 1];
+        const next = messages[i + 1];
+        const startsGroup = !prev || prev.sender !== m.sender || prev.body.startsWith("__system__");
+        const endsGroup = !next || next.sender !== m.sender || next.body.startsWith("__system__");
+
         return (
-          <div
-            key={m.id}
-            className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-snug ${
-              mine
-                ? "self-end rounded-br-md bg-coral text-[#06281A]"
-                : "self-start rounded-bl-md border border-line bg-surface"
-            }`}
-          >
-            {!mine && (
-              <div className="mb-0.5 font-mono text-[10px] font-bold text-berry">
+          <div key={m.id} className={endsGroup ? "mb-2.5" : "mb-0.5"}>
+            {startsGroup && !mine && (
+              <p className="mb-1 pl-1 text-[11px] font-semibold text-inksoft">
                 {otherName}
-              </div>
+              </p>
             )}
-            {m.body}
+            <div
+              className={`max-w-[78%] px-3.5 py-2 text-[15px] leading-snug ${
+                mine
+                  ? "ml-auto bg-coral text-[rgb(var(--on-coral))]"
+                  : "mr-auto bg-surface text-ink"
+              } ${
+                mine
+                  ? `rounded-l-2xl ${startsGroup ? "rounded-tr-2xl" : "rounded-tr-md"} ${endsGroup ? "rounded-br-md" : "rounded-br-md"}`
+                  : `rounded-r-2xl ${startsGroup ? "rounded-tl-2xl" : "rounded-tl-md"} rounded-bl-md`
+              }`}
+            >
+              {m.body}
+            </div>
           </div>
         );
       })}
@@ -624,7 +647,7 @@ function Composer({
     return (
       <button
         onClick={onOpenGames}
-        className="mb-2 flex w-full items-center gap-2 rounded-full border border-dashed border-line bg-surface px-4 py-3 text-sm text-inksoft"
+        className="mb-2 flex w-full items-center justify-center gap-2 rounded-full bg-surface px-4 py-3 text-sm text-inksoft"
       >
         <Icon name="lock" className="h-4 w-4" /> Rozmowa otworzy się po pierwszej wspólnej grze
       </button>
@@ -657,12 +680,12 @@ function Composer({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Napisz coś…"
-        className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
+        className="min-w-0 flex-1 rounded-full bg-surface px-4 py-3 text-[15px] outline-none placeholder:text-inksoft"
       />
       <button
         type="submit"
         aria-label="Wyślij"
-        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[#06281A] transition active:scale-95"
+        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[rgb(var(--on-coral))] transition active:scale-95"
       >
         <Icon name="send" className="h-5 w-5" filled />
       </button>
@@ -692,7 +715,7 @@ function GameScreen(props: {
 
   return (
     <div className="flex h-[100dvh] flex-col">
-      <header className="flex flex-none items-center gap-3 border-b border-line pb-3">
+      <header className="flex flex-none items-center gap-3 border-b border-line/70 pb-3">
         <button onClick={props.onExit} className="text-inksoft" aria-label="Wróć">
           <Icon name="back" className="h-6 w-6" />
         </button>
@@ -729,7 +752,7 @@ function Dot({ label, on }: { label: string; on: boolean }) {
     >
       <span
         className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] ${
-          on ? "bg-[#8FE3C2] text-[#06281A]" : "border border-line"
+          on ? "bg-[#6FD3A6] text-[#14211C]" : "border border-line"
         }`}
       >
         {on ? "✓" : ""}

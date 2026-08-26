@@ -73,7 +73,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-coral px-4 py-3 font-bold text-[#06281A] disabled:opacity-60"
+          className="rounded-xl bg-coral px-4 py-3 font-bold text-[#14211C] disabled:opacity-60"
         >
           {loading ? "…" : mode === "in" ? "Wejdź" : "Utwórz konto"}
         </button>

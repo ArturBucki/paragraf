@@ -111,7 +111,7 @@ export function GamePicker({
                     {daily.name}
                   </span>
                   <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-extrabold text-[#06281A]"
+                    className="rounded-full px-2 py-0.5 text-[10px] font-extrabold text-[#14211C]"
                     style={{ background: daily.accent }}
                   >
                     +{DAILY_BONUS} BONUS
@@ -128,7 +128,7 @@ export function GamePicker({
             <span className="relative mt-4 flex items-center justify-between">
               <Readiness s={stateOf(daily)} otherName={otherName} />
               <span
-                className="rounded-full px-4 py-2 text-sm font-extrabold text-[#06281A]"
+                className="rounded-full px-4 py-2 text-sm font-extrabold text-[#14211C]"
                 style={{ background: daily.accent }}
               >
                 {stateOf(daily).both
@@ -155,7 +155,7 @@ export function GamePicker({
                 Zaproponuj koło — zakręcicie, gdy oboje wejdziecie
               </span>
             </span>
-            <span className="rounded-full bg-coral px-3.5 py-1.5 text-xs font-extrabold text-[#06281A]">
+            <span className="rounded-full bg-coral px-3.5 py-1.5 text-xs font-extrabold text-[#14211C]">
               Koło
             </span>
           </button>
@@ -175,8 +175,8 @@ export function GamePicker({
                     locked ? "opacity-45" : ""
                   }`}
                   style={{
-                    borderColor: s.both ? g.accent : "var(--line)",
-                    background: s.both ? `${g.accent}1A` : "var(--surface)",
+                    borderColor: s.both ? g.accent : "rgb(var(--line))",
+                    background: s.both ? `${g.accent}1A` : "rgb(var(--surface))",
                   }}
                 >
                   <span className="flex items-start justify-between">
@@ -210,7 +210,7 @@ export function GamePicker({
                     <span className="mt-auto pt-1">
                       {s.both ? (
                         <span
-                          className="block rounded-full py-1.5 text-center text-xs font-extrabold text-[#06281A]"
+                          className="block rounded-full py-1.5 text-center text-xs font-extrabold text-[#14211C]"
                           style={{ background: g.accent }}
                         >
                           START
@@ -307,7 +307,7 @@ function Chip({ label, on }: { label: string; on: boolean }) {
     >
       <span
         className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] ${
-          on ? "bg-[#8FE3C2] text-[#06281A]" : "border border-line"
+          on ? "bg-[#6FD3A6] text-[#14211C]" : "border border-line"
         }`}
       >
         {on ? "✓" : ""}

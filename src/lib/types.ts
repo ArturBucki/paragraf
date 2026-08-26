@@ -117,37 +117,37 @@ export const MAX_LANGUAGES = 5;
 export const INTEREST_GROUPS = [
   {
     name: "Ruch",
-    accent: "#8FE3C2",
+    accent: "#7FBFA3",
     items: ["Bieganie", "Siłownia", "Joga", "Wspinaczka", "Rower", "Pływanie",
       "Piłka", "Siatkówka", "Narty", "Tenis"],
   },
   {
     name: "Kultura",
-    accent: "#C299E6",
+    accent: "#9BA8D4",
     items: ["Kino", "Seriale", "Muzyka", "Koncerty", "Teatr", "Książki",
       "Sztuka", "Fotografia", "Stand-up", "Podcasty"],
   },
   {
     name: "Jedzenie i wieczory",
-    accent: "#FF9F6B",
+    accent: "#D98A63",
     items: ["Kawa", "Gotowanie", "Wino", "Piwo kraftowe", "Sushi", "Pizza",
       "Wegetariańsko", "Słodycze", "Grill", "Śniadania na mieście"],
   },
   {
     name: "Granie",
-    accent: "#F5C86B",
+    accent: "#C8A96A",
     items: ["Planszówki", "Gry", "Karty", "Szachy", "Quizy", "Escape roomy",
       "Kalambury", "Bilard"],
   },
   {
     name: "Świat",
-    accent: "#7FD8E8",
+    accent: "#7FB0BF",
     items: ["Podróże", "Góry", "Morze", "Miasto", "Camping", "Festiwale",
       "Rolki", "Zwiedzanie"],
   },
   {
     name: "Codzienność",
-    accent: "#FF6B4A",
+    accent: "#C9695A",
     items: ["Psy", "Koty", "Rośliny", "Programowanie", "Majsterkowanie",
       "Moda", "Wolontariat", "Nauka języków"],
   },

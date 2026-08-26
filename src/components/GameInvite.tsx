@@ -3,8 +3,24 @@
 import type { Game } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 
+/** Wspólna skorupa: cicha karta z cienkim paskiem w kolorze gry. */
+function Shell({
+  accent,
+  children,
+}: {
+  accent: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-2 overflow-hidden rounded-2xl bg-surface">
+      <span className="block h-[3px] w-full" style={{ background: accent }} />
+      <div className="p-3">{children}</div>
+    </div>
+  );
+}
+
 /**
- * Zaproszenie do gry — widoczne w rozmowie, nie do przeoczenia.
+ * Zaproszenie do gry — widoczne w rozmowie, ale bez krzyku.
  * Druga osoba przyjmuje albo odrzuca; zapraszający widzi, że czeka.
  */
 export function GameInvite({
@@ -25,47 +41,43 @@ export function GameInvite({
   onDecline: () => void;
 }) {
   return (
-    <div
-      className="mb-2 rounded-2xl border-2 p-3"
-      style={{ borderColor: game.accent, background: `${game.accent}1A` }}
-    >
+    <Shell accent={game.accent}>
       <div className="flex items-center gap-3">
         <span
-          className="grid h-11 w-11 flex-none place-items-center rounded-xl"
-          style={{ background: `${game.accent}2E`, color: game.accent }}
+          className="grid h-10 w-10 flex-none place-items-center rounded-xl"
+          style={{ background: `${game.accent}22`, color: game.accent }}
         >
-          <Icon name={game.icon} className="h-6 w-6" />
+          <Icon name={game.icon} className="h-5 w-5" />
         </span>
-
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] leading-tight">
-            <span className="font-bold text-berry">{otherName}</span>{" "}
+          <p className="truncate text-[12px] leading-tight text-inksoft">
+            <span className="font-semibold text-ink">{otherName}</span>{" "}
             {lead ?? "chce zagrać"}
           </p>
-          <p className="line-clamp-2 font-display text-[15px] font-extrabold leading-tight">
+          <p className="line-clamp-2 text-[15px] font-bold leading-tight">
             {game.name}
           </p>
-          <p className="font-mono text-[10px] text-inksoft">
+          <p className="mt-0.5 text-[11px] text-inksoft">
             {note ?? `${game.time} · +${game.pts} pkt`}
           </p>
         </div>
       </div>
 
-      <div className="mt-2.5 flex gap-2">
+      <div className="mt-3 flex gap-2">
         <button
           onClick={onAccept}
-          className="flex-1 rounded-xl bg-coral py-2.5 text-sm font-extrabold text-[#06281A] transition active:scale-95"
+          className="flex-1 rounded-xl bg-coral py-2.5 text-sm font-bold text-[rgb(var(--on-coral))] transition active:scale-95"
         >
           Wchodzę
         </button>
         <button
           onClick={onDecline}
-          className="flex-none rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-inksoft transition active:scale-95"
+          className="flex-none rounded-xl bg-surface2 px-4 py-2.5 text-sm font-semibold text-inksoft transition active:scale-95"
         >
           Nie teraz
         </button>
       </div>
-    </div>
+    </Shell>
   );
 }
 
@@ -82,31 +94,35 @@ export function GameWaiting({
   onCancel: () => void;
 }) {
   return (
-    <div className="mb-2 flex items-center gap-3 rounded-2xl border border-dashed border-line bg-surface p-3">
-      <span className="relative grid h-9 w-9 flex-none place-items-center rounded-xl bg-bg" style={{ color: game.accent }}>
-        <Icon name={game.icon} className="h-5 w-5" />
-        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-ping rounded-full bg-coral" />
-      </span>
+    <Shell accent={game.accent}>
+      <div className="flex items-center gap-3">
+        <span
+          className="relative grid h-10 w-10 flex-none place-items-center rounded-xl"
+          style={{ background: `${game.accent}18`, color: game.accent }}
+        >
+          <Icon name={game.icon} className="h-5 w-5" />
+          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-coral" />
+        </span>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold leading-tight">
-          Czekasz na {otherName} — {game.name}
-        </p>
-        <p className="text-[11px] text-inksoft">
-          {otherOnline
-            ? "jest online, zaraz zobaczy zaproszenie"
-            : "offline — zaproszenie poczeka do powrotu"}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14px] font-semibold leading-tight">
+            Czekasz na {otherName}
+          </p>
+          <p className="truncate text-[12px] text-inksoft">
+            {game.name} ·{" "}
+            {otherOnline ? "jest online" : "offline, zaproszenie poczeka"}
+          </p>
+        </div>
+
+        <button
+          onClick={onCancel}
+          aria-label="Anuluj zaproszenie"
+          className="grid h-8 w-8 flex-none place-items-center rounded-full bg-surface2 text-inksoft transition active:scale-95"
+        >
+          <Icon name="close" className="h-4 w-4" />
+        </button>
       </div>
-
-      <button
-        onClick={onCancel}
-        aria-label="Anuluj zaproszenie"
-        className="grid h-8 w-8 flex-none place-items-center rounded-full border border-line text-inksoft transition active:scale-95"
-      >
-        <Icon name="close" className="h-4 w-4" />
-      </button>
-    </div>
+    </Shell>
   );
 }
 
@@ -121,28 +137,27 @@ export function GameReady({
   onStart: () => void;
 }) {
   return (
-    <div className="mb-2 rounded-2xl border-2 border-[#8FE3C2] bg-[#8FE3C2]/12 p-3">
+    <Shell accent={game.accent}>
       <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-[#8FE3C2]/20 text-berry">
-          <Icon name={game.icon} className="h-6 w-6" />
+        <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-berry/15 text-berry">
+          <Icon name={game.icon} className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] leading-tight">
+          <p className="truncate text-[12px] leading-tight text-inksoft">
             Oboje chcecie — Ty i{" "}
-            <span className="font-bold text-berry">{otherName}</span>
+            <span className="font-semibold text-ink">{otherName}</span>
           </p>
-          <p className="line-clamp-2 font-display text-[15px] font-extrabold leading-tight">
+          <p className="line-clamp-2 text-[15px] font-bold leading-tight">
             {game.name}
           </p>
         </div>
+        <button
+          onClick={onStart}
+          className="flex-none rounded-xl bg-berry px-5 py-2.5 text-sm font-bold text-[rgb(var(--on-coral))] transition active:scale-95"
+        >
+          Start
+        </button>
       </div>
-
-      <button
-        onClick={onStart}
-        className="mt-2.5 w-full rounded-xl bg-[#8FE3C2] py-2.5 text-sm font-extrabold text-[#06281A] transition active:scale-95"
-      >
-        Zaczynamy
-      </button>
-    </div>
+    </Shell>
   );
 }

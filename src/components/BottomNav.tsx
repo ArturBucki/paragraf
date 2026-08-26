@@ -30,7 +30,7 @@ export function BottomNav({ badge = 0 }: { badge?: number }) {
               <Icon name={t.icon} className="h-6 w-6" />
               <span className="text-[11px] font-bold">{t.label}</span>
               {t.href === "/matches" && badge > 0 && (
-                <span className="absolute right-[24%] top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-coral px-1 text-[10px] font-bold text-[#06281A]">
+                <span className="absolute right-[24%] top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-coral px-1 text-[10px] font-bold text-[#14211C]">
                   {badge}
                 </span>
               )}

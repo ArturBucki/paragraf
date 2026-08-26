@@ -5,15 +5,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "var(--bg)",
-        surface: "var(--surface)",
-        ink: "var(--ink)",
-        inksoft: "var(--ink-soft)",
-        line: "var(--line)",
-        coral: "var(--coral)",
-        coraldeep: "var(--coral-deep)",
-        berry: "var(--berry)",
-        gold: "var(--gold)",
+        bg: "rgb(var(--bg) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        surface2: "rgb(var(--surface-2) / <alpha-value>)",
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        inksoft: "rgb(var(--ink-soft) / <alpha-value>)",
+        line: "rgb(var(--line) / <alpha-value>)",
+        coral: "rgb(var(--coral) / <alpha-value>)",
+        coraldeep: "rgb(var(--coral-deep) / <alpha-value>)",
+        berry: "rgb(var(--berry) / <alpha-value>)",
+        gold: "rgb(var(--gold) / <alpha-value>)",
       },
       fontFamily: {
         display: ['"Bricolage Grotesque"', "system-ui", "sans-serif"],

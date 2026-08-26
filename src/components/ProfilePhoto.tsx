@@ -1,8 +1,8 @@
 import type { Profile } from "@/lib/types";
-import { Avatar, DEFAULT_AVATAR } from "@/components/Avatar";
+import { Monogram } from "@/components/Monogram";
 
 /**
- * Zdjęcie profilowe, a gdy go nie ma — ilustrowany awatar.
+ * Zdjęcie profilowe, a gdy go nie ma — monogram w tonacji apki.
  * Jeden komponent na całą apkę, żeby podmiana była w jednym miejscu.
  */
 export function ProfilePhoto({
@@ -10,7 +10,7 @@ export function ProfilePhoto({
   className = "h-full w-full",
   index = 0,
 }: {
-  profile: Pick<Profile, "photos" | "avatar" | "name"> | null;
+  profile: Pick<Profile, "photos" | "name"> & { id?: string } | null;
   className?: string;
   index?: number;
 }) {
@@ -29,5 +29,5 @@ export function ProfilePhoto({
     );
   }
 
-  return <Avatar spec={profile?.avatar ?? DEFAULT_AVATAR} className={className} />;
+  return <Monogram name={profile?.name} seed={profile?.id} className={className} />;
 }

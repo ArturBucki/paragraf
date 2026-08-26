@@ -59,7 +59,7 @@ export function ProfileView({
         {matchHref && (
           <Link
             href={matchHref}
-            className="flex flex-none items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-xs font-extrabold text-[#06281A] transition active:scale-95"
+            className="flex flex-none items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-xs font-extrabold text-[#14211C] transition active:scale-95"
           >
             <Icon name="chat" className="h-4 w-4" /> Rozmowa
           </Link>
@@ -77,7 +77,7 @@ export function ProfileView({
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
               <VerifiedBadge verified={profile.verified} onPhoto />
               {profile.looking_for && (
-                <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#06281A]">
+                <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#14211C]">
                   {profile.looking_for}
                 </span>
               )}
@@ -134,7 +134,7 @@ export function ProfileView({
           </p>
           <div className="flex flex-wrap gap-2">
             {profile.interests.map((t) => {
-              const accent = ACCENT.get(t) ?? "#8FE3C2";
+              const accent = ACCENT.get(t) ?? "#6FD3A6";
               return (
                 <span
                   key={t}

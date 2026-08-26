@@ -18,7 +18,7 @@ export function ChipOne({
   name,
   options,
   value,
-  accent = "#FF6B4A",
+  accent = "#FF7A5C",
 }: {
   name: string;
   options: readonly string[];
@@ -54,7 +54,7 @@ export function ChipMany({
   options,
   value,
   max,
-  accent = "#8FE3C2",
+  accent = "#6FD3A6",
 }: {
   name: string;
   options: readonly string[];
@@ -131,7 +131,7 @@ export function InterestPicker({
         </p>
         <span
           className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-bold ${
-            full ? "bg-coral text-[#06281A]" : "bg-bg text-gold"
+            full ? "bg-coral text-[#14211C]" : "bg-bg text-gold"
           }`}
         >
           {sel.length}/{max}

@@ -93,7 +93,7 @@ export function GameWheel({
           style={{
             borderLeft: "9px solid transparent",
             borderRight: "9px solid transparent",
-            borderTop: "16px solid #FF6B4A",
+            borderTop: "16px solid #FF7A5C",
           }}
         />
         <svg
@@ -142,12 +142,12 @@ export function GameWheel({
               </g>
             );
           })}
-          <circle cx={C} cy={C} r="19" fill="#FF6B4A" stroke="#0A3B2C" strokeWidth="3" />
+          <circle cx={C} cy={C} r="19" fill="#FF7A5C" stroke="#0A3B2C" strokeWidth="3" />
         </svg>
       </div>
 
       {landed ? (
-        <div className="flex items-center gap-2 rounded-full bg-[#8FE3C2] px-4 py-2 text-sm font-bold text-[#06281A]">
+        <div className="flex items-center gap-2 rounded-full bg-[#6FD3A6] px-4 py-2 text-sm font-bold text-[#14211C]">
           <Icon name={landed.icon} className="h-4 w-4" />
           {landed.name}
         </div>
@@ -155,7 +155,7 @@ export function GameWheel({
         <button
           onClick={spin}
           disabled={spinning}
-          className="rounded-full bg-coral px-8 py-3 font-bold text-[#06281A] transition active:scale-95 disabled:opacity-60"
+          className="rounded-full bg-coral px-8 py-3 font-bold text-[#14211C] transition active:scale-95 disabled:opacity-60"
         >
           {spinning ? "Kręci się…" : "Zakręćcie kołem"}
         </button>

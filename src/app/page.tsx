@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * Landing — paleta 70/20/10:
  *  70%  butelkowa zieleń (#0A3B2C / #07301F)  — grunt strony
  *  20%  ciepły kremowy (#F2EFE4)              — treść, karty, oddech
- *  10%  koral (#FF6B4A)                       — akcent, tylko tam gdzie ma kliknąć wzrok
+ *  10%  koral (#FF7A5C)                       — akcent, tylko tam gdzie ma kliknąć wzrok
  */
 export default async function Home() {
   const user = await currentUser();
@@ -21,7 +21,7 @@ export default async function Home() {
       {/* ---------------------------------------------------------------- nav */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <span className="font-display text-xl font-extrabold tracking-tight">
-          para<span className="text-[#FF6B4A]">graf</span>
+          para<span className="text-[#FF7A5C]">graf</span>
         </span>
         <Link
           href="/login"
@@ -39,7 +39,7 @@ export default async function Home() {
 
         <h1 className="max-w-[15ch] font-display text-[2.75rem] font-extrabold leading-[1.02] tracking-tight md:text-7xl">
           Match to dopiero{" "}
-          <span className="relative whitespace-nowrap text-[#FF6B4A]">
+          <span className="relative whitespace-nowrap text-[#FF7A5C]">
             początek
             <svg
               aria-hidden="true"
@@ -50,7 +50,7 @@ export default async function Home() {
               <path
                 d="M2 9 Q 75 2 150 7 T 298 5"
                 fill="none"
-                stroke="#FF6B4A"
+                stroke="#FF7A5C"
                 strokeWidth="3"
                 strokeLinecap="round"
                 opacity="0.55"
@@ -69,7 +69,7 @@ export default async function Home() {
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             href="/login"
-            className="rounded-2xl bg-[#FF6B4A] px-8 py-4 text-center font-bold text-[#0A3B2C] shadow-[0_12px_30px_-12px_rgba(255,107,74,0.8)] transition hover:brightness-105"
+            className="rounded-2xl bg-[#FF7A5C] px-8 py-4 text-center font-bold text-[#0A3B2C] shadow-[0_12px_30px_-12px_rgba(255,107,74,0.8)] transition hover:brightness-105"
           >
             Zacznij grać
           </Link>
@@ -110,7 +110,7 @@ export default async function Home() {
       {/* ------------------------------------------------------- jak to działa */}
       <section id="jak-to-dziala" className="mx-auto max-w-5xl px-6 py-20 md:py-24">
         <h2 className="max-w-[18ch] font-display text-3xl font-extrabold leading-tight tracking-tight md:text-5xl">
-          Poznajecie się, robiąc coś <em className="not-italic text-[#FF6B4A]">razem</em>.
+          Poznajecie się, robiąc coś <em className="not-italic text-[#FF7A5C]">razem</em>.
         </h2>
         <p className="mt-5 max-w-xl text-[#F2EFE4]/70">
           Bo najmocniej zbliża nie ocenianie zdjęć, tylko bycie po tej samej stronie.
@@ -165,9 +165,9 @@ export default async function Home() {
                 key={g.id}
                 className="flex items-start gap-3 rounded-2xl border border-[#F2EFE4]/12 bg-[#F2EFE4]/[0.04] p-5"
               >
-                <Icon name={g.icon} className="h-6 w-6 flex-none text-[#FF6B4A]" />
+                <Icon name={g.icon} className="h-6 w-6 flex-none text-[#FF7A5C]" />
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#FF6B4A]">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#FF7A5C]">
                     {g.tag} · +{g.pts}
                   </div>
                   <h3 className="mt-1 font-bold leading-tight">{g.name}</h3>
@@ -234,7 +234,7 @@ export default async function Home() {
           </p>
           <Link
             href="/login"
-            className="mt-10 inline-block rounded-2xl bg-[#FF6B4A] px-10 py-4 font-bold text-[#0A3B2C] shadow-[0_12px_30px_-12px_rgba(255,107,74,0.8)] transition hover:brightness-105"
+            className="mt-10 inline-block rounded-2xl bg-[#FF7A5C] px-10 py-4 font-bold text-[#0A3B2C] shadow-[0_12px_30px_-12px_rgba(255,107,74,0.8)] transition hover:brightness-105"
           >
             Załóż konto — za darmo
           </Link>
@@ -243,7 +243,7 @@ export default async function Home() {
 
       <footer className="mx-auto flex max-w-5xl flex-col gap-2 px-6 py-10 text-sm text-[#F2EFE4]/40 sm:flex-row sm:items-center sm:justify-between">
         <span>
-          para<span className="text-[#FF6B4A]">graf</span> — poznaj się przez grę
+          para<span className="text-[#FF7A5C]">graf</span> — poznaj się przez grę
         </span>
         <span>Wersja wczesna · buduje się na bieżąco</span>
       </footer>

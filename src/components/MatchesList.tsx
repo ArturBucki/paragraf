@@ -70,7 +70,7 @@ export function MatchesList({
                 >
                   <div
                     className={`relative h-[68px] w-[68px] rounded-full p-[2px] ${
-                      isOnline ? "bg-[#8FE3C2]" : "bg-line"
+                      isOnline ? "bg-[#6FD3A6]" : "bg-line"
                     }`}
                   >
                     <div className="h-full w-full overflow-hidden rounded-full border-2 border-bg">
@@ -109,7 +109,7 @@ export function MatchesList({
                   href={`/matches/${m.id}`}
                   prefetch
                   className={`flex items-center gap-3 rounded-2xl border p-3 transition active:scale-[0.99] ${
-                    g ? "border-[#8FE3C2] bg-[#8FE3C2]/10" : "border-line bg-surface"
+                    g ? "border-[#6FD3A6] bg-[#6FD3A6]/10" : "border-line bg-surface"
                   }`}
                 >
                   <div className="relative h-14 w-14 shrink-0">
@@ -117,7 +117,7 @@ export function MatchesList({
                       <ProfilePhoto profile={p ?? null} />
                     </div>
                     {isOnline && (
-                      <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-bg bg-[#8FE3C2]" />
+                      <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-bg bg-[#6FD3A6]" />
                     )}
                   </div>
 

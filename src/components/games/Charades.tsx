@@ -156,7 +156,7 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           drawing.current = false;
           last.current = null;
         }}
-        className={`min-h-[240px] flex-1 rounded-2xl border border-line bg-[#06281A] ${
+        className={`min-h-[240px] flex-1 rounded-2xl border border-line bg-[#14211C] ${
           iDraw ? "touch-none" : ""
         }`}
       />
@@ -195,7 +195,7 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           />
           <button
             type="submit"
-            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[#06281A]"
+            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[#14211C]"
           >
             Zgaduj
           </button>

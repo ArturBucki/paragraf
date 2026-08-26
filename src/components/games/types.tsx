@@ -20,12 +20,12 @@ export function Won({
   onFinish: () => void;
 }) {
   return (
-    <div className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-[#8FE3C2] bg-[#8FE3C2]/12 p-6 text-center">
+    <div className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-[#6FD3A6] bg-[#6FD3A6]/12 p-6 text-center">
       <p className="font-display text-lg font-extrabold">{title}</p>
       <p className="text-sm text-inksoft">{sub}</p>
       <button
         onClick={onFinish}
-        className="mt-1 rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
+        className="mt-1 rounded-xl bg-coral px-6 py-3 font-bold text-[#14211C]"
       >
         Odbierzcie punkty
       </button>

@@ -25,37 +25,37 @@ export const GAMES: Game[] = [
   {
     id: "ttt", short: "Kółko", icon: "grid",
     name: "Kółko i krzyżyk", desc: "Szybka rozgrywka na rozgrzewkę.",
-    tag: "Rywalizacja", time: "1 min", accent: "#F5C86B",
+    tag: "Rywalizacja", time: "1 min", accent: "#C8A96A",
     pts: 30, unlock: 0, kind: "versus",
   },
   {
     id: "truths", short: "2 prawdy", icon: "masks",
     name: "Dwie prawdy, jedno kłamstwo", desc: "Zgadnij, co zmyśliła druga osoba.",
-    tag: "Poznajcie się", time: "2 min", accent: "#C299E6",
+    tag: "Poznajcie się", time: "2 min", accent: "#9BA8D4",
     pts: 40, unlock: 0, kind: "social",
   },
   {
     id: "riddle", short: "Zagadka", icon: "puzzle",
     name: "Zagadka we dwoje", desc: "Każde ma połowę wskazówek — złóżcie je.",
-    tag: "Współpraca", time: "3 min", accent: "#8FE3C2",
+    tag: "Współpraca", time: "3 min", accent: "#7FBFA3",
     pts: 60, unlock: 0, kind: "coop",
   },
   {
     id: "draw", short: "Kalambury", icon: "brush",
     name: "Kalambury", desc: "Jedno rysuje, drugie zgaduje — na żywo.",
-    tag: "Zabawa", time: "3 min", accent: "#FF9F6B",
+    tag: "Zabawa", time: "3 min", accent: "#D98A63",
     pts: 50, unlock: 60, kind: "create",
   },
   {
     id: "q36", short: "36 pytań", icon: "chat",
     name: "36 pytań", desc: "Głębsze pytania, które zbliżają.",
-    tag: "Bliskość", time: "10 min", accent: "#7FD8E8",
+    tag: "Bliskość", time: "10 min", accent: "#7FB0BF",
     pts: 80, unlock: 150, kind: "social",
   },
   {
     id: "escape", short: "Escape", icon: "key",
     name: "Escape room we dwoje", desc: "Trzy zamki, dwie połówki wskazówek.",
-    tag: "Współpraca+", time: "6 min", accent: "#FF6B4A",
+    tag: "Współpraca+", time: "6 min", accent: "#C9695A",
     pts: 100, unlock: 320, kind: "coop",
   },
 ];

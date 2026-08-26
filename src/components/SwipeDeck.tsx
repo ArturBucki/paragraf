@@ -51,7 +51,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         </p>
         <Link
           href="/matches"
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#06281A]"
+          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#14211C]"
         >
           Wybierzcie grę →
         </Link>
@@ -146,7 +146,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           </>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent p-5 pb-16 pt-16 text-white">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-5 pb-16 pt-24 text-white">
           <h2 className="font-display text-2xl font-extrabold">
             {current.name}
             {current.age ? `, ${current.age}` : ""}
@@ -154,7 +154,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <VerifiedBadge verified={current.verified} onPhoto />
             {current.looking_for && (
-              <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#06281A]">
+              <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#14211C]">
                 {current.looking_for}
               </span>
             )}
@@ -205,7 +205,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         <button
           onClick={onLike}
           aria-label="Polub"
-          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[#06281A] transition active:scale-90"
+          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[#14211C] transition active:scale-90"
         >
           <Icon name="heart" className="h-7 w-7" filled />
         </button>
