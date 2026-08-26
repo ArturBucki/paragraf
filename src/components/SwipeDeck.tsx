@@ -120,6 +120,15 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           </div>
         )}
 
+        {/* Pełny profil — to samo miejsce co w Tinderze, prawy dolny róg. */}
+        <Link
+          href={`/profil/${current.id}?skad=swipe`}
+          aria-label="Zobacz cały profil"
+          className="absolute bottom-4 right-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-white/40 bg-black/45 text-white backdrop-blur-sm transition active:scale-95"
+        >
+          <Icon name="info" className="h-5 w-5" />
+        </Link>
+
         {/* Dotknięcie lewej/prawej połowy przewija zdjęcia — jak w Tinderze. */}
         {shots.length > 1 && (
           <>
@@ -136,7 +145,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           </>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent p-5 pt-16 text-white">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent p-5 pb-16 pt-16 text-white">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <h2 className="font-display text-2xl font-extrabold">
               {current.name}

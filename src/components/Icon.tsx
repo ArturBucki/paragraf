@@ -23,7 +23,8 @@ export type IconName =
   | "pin"
   | "work"
   | "cap"
-  | "ruler";
+  | "ruler"
+  | "info";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // Talia kart — odkrywanie
@@ -136,6 +137,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 4.6 21.4 9 12 13.4 2.6 9 12 4.6Z" />
       <path d="M6.6 11v4.4c0 1.5 2.4 2.8 5.4 2.8s5.4-1.3 5.4-2.8V11" />
+    </>
+  ),
+  // Więcej o osobie
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M12 11v5.2" />
+      <path d="M12 7.9h.01" />
     </>
   ),
   // Wzrost — miarka

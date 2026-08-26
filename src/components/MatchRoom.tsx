@@ -320,16 +320,23 @@ export function MatchRoom({
         <Link href="/matches" className="text-inksoft" aria-label="Wróć">
           <Icon name="back" className="h-6 w-6" />
         </Link>
-        <div className="relative h-11 w-11 shrink-0">
+        <Link
+          href={other ? `/profil/${other.id}` : "#"}
+          className="relative h-11 w-11 shrink-0"
+          aria-label={`Profil: ${otherName}`}
+        >
           <div className="h-full w-full overflow-hidden rounded-full">
             <ProfilePhoto profile={other ?? null} />
           </div>
           {otherOnline && (
             <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#8FE3C2]" />
           )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-bold leading-tight">{otherName}</div>
+        </Link>
+        <Link href={other ? `/profil/${other.id}` : "#"} className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="truncate font-bold leading-tight">{otherName}</span>
+            <Icon name="info" className="h-3.5 w-3.5 flex-none text-inksoft" />
+          </div>
           <div className="text-xs text-inksoft">
             {otherOnline ? (
               <span className="font-semibold text-berry">jest teraz online</span>
@@ -337,7 +344,7 @@ export function MatchRoom({
               "offline — zaproszenie poczeka"
             )}
           </div>
-        </div>
+        </Link>
         <span className="rounded-full bg-gold/15 px-3 py-1 font-mono text-xs font-bold text-gold">
           <Icon name="spark" className="inline h-3 w-3 align-[-1px]" /> {points}
         </span>
