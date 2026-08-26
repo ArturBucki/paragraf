@@ -92,11 +92,14 @@ export function GameWaiting({
   game,
   otherName,
   otherOnline,
+  otherInRoom,
   onCancel,
 }: {
   game: Game;
   otherName: string;
   otherOnline: boolean;
+  /** Czy druga osoba siedzi w tej rozmowie — tylko wtedy gra ruszy od razu. */
+  otherInRoom?: boolean;
   onCancel: () => void;
 }) {
   return (
@@ -115,7 +118,11 @@ export function GameWaiting({
           </p>
           <p className="truncate text-[12px] text-inksoft">
             {game.name} ·{" "}
-            {otherOnline ? "jest online" : "offline, zaproszenie poczeka"}
+            {otherInRoom
+              ? "jest tu z Tobą"
+              : otherOnline
+                ? "jest w apce, zaraz zobaczy"
+                : "offline, zaproszenie poczeka"}
           </p>
         </div>
 
@@ -135,10 +142,13 @@ export function GameWaiting({
 export function GameReady({
   game,
   otherName,
+  ready = true,
   onStart,
 }: {
   game: Game;
   otherName: string;
+  /** Gra rusza dopiero, gdy oboje jesteście w rozmowie. */
+  ready?: boolean;
   onStart: () => void;
 }) {
   return (
@@ -149,8 +159,17 @@ export function GameReady({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12px] leading-tight text-inksoft">
-            Oboje chcecie — Ty i{" "}
-            <span className="font-semibold text-ink">{otherName}</span>
+            {ready ? (
+              <>
+                Oboje chcecie — Ty i{" "}
+                <span className="font-semibold text-ink">{otherName}</span>
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-ink">{otherName}</span>{" "}
+                wróci do rozmowy i zaczynacie
+              </>
+            )}
           </p>
           <p className="line-clamp-2 text-[15px] font-bold leading-tight">
             {game.name}
@@ -158,9 +177,10 @@ export function GameReady({
         </div>
         <button
           onClick={onStart}
-          className="flex-none rounded-xl bg-berry px-5 py-2.5 text-sm font-bold text-white transition active:scale-95"
+          disabled={!ready}
+          className="flex-none rounded-xl bg-berry px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-45"
         >
-          Start
+          {ready ? "Start" : "Czeka"}
         </button>
       </div>
     </Shell>

@@ -81,6 +81,12 @@ export function MatchRoom({
   const [active, setActive] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  /*
+   * Kto jest teraz W TEJ rozmowie. Globalna obecność mówi tylko „jest w apce",
+   * a gra wymaga, żeby druga osoba siedziała w tym samym pokoju — inaczej
+   * sygnał startu do niej nie dociera i wchodzisz do gry we dwoje sam.
+   */
+  const [inRoom, setInRoom] = useState<Set<string>>(new Set());
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   /*
@@ -124,6 +130,7 @@ export function MatchRoom({
   const playedAny = rows.some((r) => r.played);
   const online = usePresence(meId);
   const otherOnline = other ? online.has(other.id) : false;
+  const otherInRoom = other ? inRoom.has(other.id) : false;
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -144,7 +151,7 @@ export function MatchRoom({
 
   useEffect(() => {
     const ch = supabase
-      .channel(`match:${matchId}`)
+      .channel(`match:${matchId}`, { config: { presence: { key: meId } } })
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "match_games", filter: `match_id=eq.${matchId}` },
@@ -184,19 +191,26 @@ export function MatchRoom({
           setActive(payload.gameId as string);
         }
       })
+      .on("presence", { event: "sync" }, () => {
+        setInRoom(new Set(Object.keys(ch.presenceState())));
+      })
       .on("broadcast", { event: "decline" }, ({ payload }) => {
         const id = payload?.gameId as string | undefined;
         const g = id === RANDOM_ID ? RANDOM_GAME : id ? gameById(id) : null;
         if (g) flashRef.current(`${otherNameRef.current} woli teraz nie grać w „${g.name}".`);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          ch.track({ at: new Date().toISOString() });
+        }
+      });
 
     channelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
       channelRef.current = null;
     };
-  }, [supabase, matchId]);
+  }, [supabase, matchId, meId]);
 
   /**
    * Zaznacza moją chęć na jedną grę — i kasuje poprzednią.
@@ -257,7 +271,8 @@ export function MatchRoom({
   function acceptInvite(gameId: string) {
     optimisticToggle(gameId);
     enqueue(() => supabase.rpc("pick_game", { p_match: matchId, p_game: gameId }));
-    startGame(gameId);
+    // Jeśli zapraszający zdążył wyjść, zostaje sama zgoda — wejdzie, gdy wróci.
+    if (otherInRoom) startGame(gameId);
   }
 
   /** Odrzucam: kasujemy chęć obojga i mówimy o tym drugiej osobie. */
@@ -276,6 +291,10 @@ export function MatchRoom({
   }
 
   function startGame(gameId: string) {
+    if (!otherInRoom) {
+      flash(`${otherName} nie jest teraz w rozmowie — gra poczeka.`);
+      return;
+    }
     setSheet(false);
     setActive(gameId);
     channelRef.current?.send({ type: "broadcast", event: "start", payload: { gameId } });
@@ -425,8 +444,10 @@ export function MatchRoom({
             <Icon name="info" className="h-3.5 w-3.5 flex-none text-inksoft" />
           </div>
           <div className="text-xs text-inksoft">
-            {otherOnline ? (
-              <span className="font-semibold text-berry">jest teraz online</span>
+            {otherInRoom ? (
+              <span className="font-semibold text-berry">jest tu z Tobą</span>
+            ) : otherOnline ? (
+              "jest w apce, ale nie w tej rozmowie"
             ) : (
               "offline — zaproszenie poczeka"
             )}
