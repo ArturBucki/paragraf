@@ -48,6 +48,22 @@ export default async function Settings() {
           </div>
         </header>
 
+        <a
+          href="/profil/podglad"
+          className="flex items-center gap-3 rounded-2xl bg-surface p-3 soft-1 transition active:scale-[0.99]"
+        >
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-coral/15 text-coraldeep">
+            <Icon name="eye" className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">Zobacz, jak widzą Cię inni</span>
+            <span className="block text-[11px] text-inksoft">
+              Karta w swipe i pełny profil — dokładnie tak, jak u nich
+            </span>
+          </span>
+          <Icon name="back" className="h-4 w-4 flex-none rotate-180 text-inksoft" />
+        </a>
+
         <PhotoUploader userId={user.id} initial={profile?.photos ?? []} />
 
         <ProfileForm

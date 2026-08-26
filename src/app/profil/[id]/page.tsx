@@ -15,8 +15,8 @@ export default async function ProfilPage({
   const user = await currentUser();
   if (!user) redirect("/login");
 
-  // Własny profil edytuje się w ustawieniach — nie ma sensu go tu oglądać.
-  if (params.id === user.id) redirect("/settings");
+  // Własny profil ma osobny podgląd — z przełącznikiem karta / pełny profil.
+  if (params.id === user.id) redirect("/profil/podglad");
 
   const supabase = createClient();
 

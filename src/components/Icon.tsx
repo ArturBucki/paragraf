@@ -25,7 +25,8 @@ export type IconName =
   | "cap"
   | "ruler"
   | "info"
-  | "verified";
+  | "verified"
+  | "eye";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // Talia kart — odkrywanie
@@ -155,6 +156,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 3.2l2.3 1.7 2.8-.2.9 2.7 2.3 1.6-1 2.7 1 2.7-2.3 1.6-.9 2.7-2.8-.2L12 20.8l-2.3-1.7-2.8.2-.9-2.7-2.3-1.6 1-2.7-1-2.7 2.3-1.6.9-2.7 2.8.2Z" />
       <path d="M8.8 12.1l2.2 2.2 4.2-4.4" />
+    </>
+  ),
+  // Podgląd — oko
+  eye: (
+    <>
+      <path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z" />
+      <circle cx="12" cy="12" r="2.9" />
     </>
   ),
   // Wzrost — miarka

@@ -18,11 +18,14 @@ export function ProfileView({
   profile,
   backHref,
   matchHref,
+  embedded = false,
 }: {
   profile: Profile;
   backHref: string;
   /** Jeśli to Wasza para — skrót z powrotem do rozmowy. */
   matchHref?: string;
+  /** W podglądzie własnego profilu nagłówek jest wyżej — tu go nie powtarzamy. */
+  embedded?: boolean;
 }) {
   const meta: { icon: IconName; text: string }[] = [];
   if (profile.city) meta.push({ icon: "pin", text: profile.city });
@@ -46,7 +49,8 @@ export function ProfileView({
   add("Języki", profile.languages?.join(", ") || null);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 pb-28 pt-4">
+    <main className={`mx-auto flex max-w-md flex-col gap-4 px-4 ${embedded ? "pb-2 pt-0" : "min-h-screen pb-28 pt-4"}`}>
+      {!embedded && (
       <header className="flex items-center gap-3">
         <Link
           href={backHref}
@@ -65,6 +69,7 @@ export function ProfileView({
           </Link>
         )}
       </header>
+      )}
 
       <PhotoViewer
         profile={profile}
