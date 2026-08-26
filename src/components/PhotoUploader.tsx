@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { savePhotos } from "@/app/settings/actions";
 import { Icon } from "@/components/Icon";
 
 const MAX = 6;
@@ -37,6 +36,14 @@ export function PhotoUploader({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  /** Zapis listy zdjęć prosto do bazy — bez rundy po serwerze Next. */
+  async function persist(next: string[]) {
+    await createClient()
+      .from("profiles")
+      .update({ photos: next.slice(0, MAX) })
+      .eq("id", userId);
+  }
+
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []).slice(0, MAX - photos.length);
     e.target.value = "";
@@ -62,7 +69,7 @@ export function PhotoUploader({
 
       const next = [...photos, ...added].slice(0, MAX);
       setPhotos(next);
-      await savePhotos(next);
+      await persist(next);
     } catch (err: any) {
       setError(err?.message ?? "Nie udało się wgrać zdjęcia.");
     } finally {
@@ -73,7 +80,7 @@ export function PhotoUploader({
   async function remove(url: string) {
     const next = photos.filter((p) => p !== url);
     setPhotos(next);
-    await savePhotos(next);
+    await persist(next);
 
     // Sprzątamy plik w magazynie, żeby nie zostawiać śmieci.
     const supabase = createClient();
@@ -88,7 +95,7 @@ export function PhotoUploader({
   async function makeMain(url: string) {
     const next = [url, ...photos.filter((p) => p !== url)];
     setPhotos(next);
-    await savePhotos(next);
+    await persist(next);
   }
 
   return (

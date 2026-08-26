@@ -19,12 +19,7 @@ import { Charades } from "@/components/games/Charades";
 import { Truths } from "@/components/games/Truths";
 import { Questions36 } from "@/components/games/Questions36";
 import { EscapeRoom } from "@/components/games/EscapeRoom";
-import {
-  toggleWantGame,
-  declineGame,
-  finishGame,
-  sendMessage,
-} from "@/app/matches/[id]/actions";
+import { finishGame } from "@/app/matches/[id]/actions";
 
 type MatchGame = {
   game_id: string;
@@ -87,6 +82,43 @@ export function MatchRoom({
   const [toast, setToast] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  /*
+   * PŁYNNOŚĆ — trzy rzeczy naraz:
+   * 1. zapisy idą prosto do bazy z przeglądarki (jedno zapytanie zamiast
+   *    kilku przez serwer Next), więc klik nie czeka na rundę po serwerze,
+   * 2. lecą w kolejce, żeby dwa szybkie kliknięcia nie wyprzedziły się nawzajem,
+   * 3. dopóki mam własne zmiany w locie, ignoruję echo z Realtime —
+   *    to ono powodowało „przeskakiwanie" wyboru po chwili.
+   */
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const inFlight = useRef(0);
+
+  const enqueue = useCallback(
+    (job: () => PromiseLike<unknown>, onError?: () => void) => {
+      inFlight.current += 1;
+      queue.current = Promise.resolve(queue.current)
+        .then(() => job())
+        .catch((e) => {
+          onError?.();
+          console.error(e);
+        })
+        .finally(() => {
+          inFlight.current -= 1;
+          // Ostatni zapis z serii dociąga prawdę z bazy — bez migotania po drodze.
+          if (inFlight.current === 0) {
+            supabase
+              .from("match_games")
+              .select("game_id,a_wants,b_wants,played")
+              .eq("match_id", matchId)
+              .then(({ data }) => {
+                if (data) setRows(data as MatchGame[]);
+              });
+          }
+        });
+    },
+    [supabase, matchId],
+  );
+
   const otherName = other?.name ?? "Twój match";
   const playedAny = rows.some((r) => r.played);
   const online = usePresence(meId);
@@ -118,6 +150,7 @@ export function MatchRoom({
         (payload) => {
           const row = payload.new as MatchGame;
           if (!row?.game_id) return;
+          if (inFlight.current > 0) return; // moje własne echo — mam nowszy stan
           setRows((prev) => [...prev.filter((r) => r.game_id !== row.game_id), row]);
         },
       )
@@ -190,7 +223,7 @@ export function MatchRoom({
     });
   }
 
-  async function onToggle(gameId: string) {
+  function onToggle(gameId: string) {
     if (gameId !== RANDOM_ID) {
       const g = gameById(gameId);
       if (!g) return;
@@ -205,17 +238,24 @@ export function MatchRoom({
     }
     const snapshot = rows;
     optimisticToggle(gameId);
-    const res = await toggleWantGame(matchId, gameId);
-    if (!res.ok) {
-      setRows(snapshot); // cofamy cały stan, nie tylko klikniętą grę
-      flash(res.error);
-    }
+    enqueue(
+      () =>
+        supabase
+          .rpc("pick_game", { p_match: matchId, p_game: gameId })
+          .then(({ error }) => {
+            if (error) throw error;
+          }),
+      () => {
+        setRows(snapshot); // cofamy cały stan, nie tylko klikniętą grę
+        flash("Nie udało się zapisać wyboru.");
+      },
+    );
   }
 
   /** Przyjmuję zaproszenie: zaznaczam chęć i od razu wchodzimy oboje. */
   function acceptInvite(gameId: string) {
     optimisticToggle(gameId);
-    toggleWantGame(matchId, gameId).catch(() => {});
+    enqueue(() => supabase.rpc("pick_game", { p_match: matchId, p_game: gameId }));
     startGame(gameId);
   }
 
@@ -231,7 +271,7 @@ export function MatchRoom({
       event: "decline",
       payload: { gameId },
     });
-    declineGame(matchId, gameId).catch(() => {});
+    enqueue(() => clearWants(gameId));
   }
 
   function startGame(gameId: string) {
@@ -251,8 +291,19 @@ export function MatchRoom({
   /** Przyjmuję propozycję losowania — koło otworzy się obojgu. */
   function acceptRandom() {
     optimisticToggle(RANDOM_ID);
-    toggleWantGame(matchId, RANDOM_ID).catch(() => {});
+    enqueue(() => supabase.rpc("pick_game", { p_match: matchId, p_game: RANDOM_ID }));
   }
+
+  /** Kasuje chęć obojga dla jednej gry (odmowa, rezygnacja z losowania). */
+  const clearWants = useCallback(
+    (gameId: string) =>
+      supabase
+        .from("match_games")
+        .update({ a_wants: false, b_wants: false, updated_at: new Date().toISOString() })
+        .eq("match_id", matchId)
+        .eq("game_id", gameId),
+    [supabase, matchId],
+  );
 
   /** Sprząta zgodę na losowanie (po wyniku albo po rezygnacji). */
   function clearRandom() {
@@ -261,7 +312,7 @@ export function MatchRoom({
         r.game_id === RANDOM_ID ? { ...r, a_wants: false, b_wants: false } : r,
       ),
     );
-    declineGame(matchId, RANDOM_ID).catch(() => {});
+    enqueue(() => clearWants(RANDOM_ID));
   }
 
   // Zamykamy grę i pokazujemy punkty OD RAZU — zapis leci w tle.
@@ -447,6 +498,7 @@ export function MatchRoom({
 
         <Composer
           matchId={matchId}
+          meId={meId}
           locked={!playedAny}
           onOpenGames={() => setSheet(true)}
           onOptimistic={(body) =>
@@ -627,12 +679,14 @@ function Stream({
 
 function Composer({
   matchId,
+  meId,
   locked,
   onOpenGames,
   onOptimistic,
   onFailed,
 }: {
   matchId: string;
+  meId: string;
   locked: boolean;
   onOpenGames: () => void;
   onOptimistic: (body: string) => void;
@@ -651,23 +705,22 @@ function Composer({
     );
   }
 
-  // Wiadomość ląduje w rozmowie od razu; wysyłka leci w tle.
+  // Wiadomość ląduje w rozmowie od razu; wysyłka leci prosto do bazy
+  // (RLS pilnuje, że sender to ja i że należę do tej pary).
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const body = text.trim();
-    if (!body) return;
+    if (!body || body.length > 2000) return;
     setText("");
     onOptimistic(body);
-    sendMessage(matchId, body)
-      .then((res) => {
-        if (!res.ok) {
+    createClient()
+      .from("messages")
+      .insert({ match_id: matchId, sender: meId, body })
+      .then(({ error }) => {
+        if (error) {
           onFailed(body);
           setText(body);
         }
-      })
-      .catch(() => {
-        onFailed(body);
-        setText(body);
       });
   }
 

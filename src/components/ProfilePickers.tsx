@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { INTEREST_GROUPS } from "@/lib/types";
 
 /* Wspólny wygląd pigułki — jedno miejsce, żeby wszystko klikało się tak samo. */
@@ -15,17 +14,17 @@ function chipStyle(on: boolean, accent: string): React.CSSProperties {
 
 /** Wybór jednej odpowiedzi. Klik zmienia zdanie — bez list rozwijanych. */
 export function ChipOne({
-  name,
   options,
   value,
-  accent = "#FF7A5C",
+  onChange,
+  accent = "#F5A524",
 }: {
-  name: string;
   options: readonly string[];
   value: string | null;
+  onChange: (v: string | null) => void;
   accent?: string;
 }) {
-  const [sel, setSel] = useState<string | null>(value);
+  const sel = value;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -35,7 +34,7 @@ export function ChipOne({
           <button
             key={o}
             type="button"
-            onClick={() => setSel(on ? null : o)}
+            onClick={() => onChange(on ? null : o)}
             className={`${CHIP} ${on ? "" : "border-line bg-surface text-inksoft"}`}
             style={chipStyle(on, accent)}
           >
@@ -43,31 +42,34 @@ export function ChipOne({
           </button>
         );
       })}
-      <input type="hidden" name={name} value={sel ?? ""} />
     </div>
   );
 }
 
 /** Wybór kilku odpowiedzi z limitem — licznik mówi, ile jeszcze można. */
 export function ChipMany({
-  name,
   options,
   value,
+  onChange,
   max,
-  accent = "#6FD3A6",
+  accent = "#157A59",
 }: {
-  name: string;
   options: readonly string[];
   value: string[];
+  onChange: (v: string[]) => void;
   max: number;
   accent?: string;
 }) {
-  const [sel, setSel] = useState<string[]>(value);
+  const sel = value;
   const full = sel.length >= max;
 
   function toggle(o: string) {
-    setSel((s) =>
-      s.includes(o) ? s.filter((x) => x !== o) : s.length >= max ? s : [...s, o],
+    onChange(
+      sel.includes(o)
+        ? sel.filter((x) => x !== o)
+        : sel.length >= max
+          ? sel
+          : [...sel, o],
     );
   }
 
@@ -96,9 +98,6 @@ export function ChipMany({
       <p className="mt-2 font-mono text-[10px] text-inksoft">
         {sel.length}/{max} wybrane
       </p>
-      {sel.map((o) => (
-        <input key={o} type="hidden" name={name} value={o} />
-      ))}
     </div>
   );
 }
@@ -109,17 +108,23 @@ export function ChipMany({
  */
 export function InterestPicker({
   value,
+  onChange,
   max,
 }: {
   value: string[];
+  onChange: (v: string[]) => void;
   max: number;
 }) {
-  const [sel, setSel] = useState<string[]>(value);
+  const sel = value;
   const full = sel.length >= max;
 
   function toggle(o: string) {
-    setSel((s) =>
-      s.includes(o) ? s.filter((x) => x !== o) : s.length >= max ? s : [...s, o],
+    onChange(
+      sel.includes(o)
+        ? sel.filter((x) => x !== o)
+        : sel.length >= max
+          ? sel
+          : [...sel, o],
     );
   }
 
@@ -169,9 +174,6 @@ export function InterestPicker({
         </div>
       ))}
 
-      {sel.map((o) => (
-        <input key={o} type="hidden" name="interests" value={o} />
-      ))}
     </div>
   );
 }
