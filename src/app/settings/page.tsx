@@ -111,7 +111,7 @@ export default async function Settings({
         </section>
 
         {searchParams.zapisano && (
-          <p className="rounded-xl border border-[#6FD3A6] bg-[#6FD3A6]/12 px-4 py-2.5 text-sm font-semibold text-berry">
+          <p className="rounded-xl border border-[#6FD3A6] bg-berry/12 px-4 py-2.5 text-sm font-semibold text-berry">
             Zapisano zmiany ✓
           </p>
         )}
@@ -345,7 +345,7 @@ export default async function Settings({
 
           <button
             type="submit"
-            className="sticky bottom-24 z-10 rounded-xl bg-coral px-4 py-3.5 font-bold text-[#14211C] shadow-lg transition active:scale-[0.99]"
+            className="sticky bottom-24 z-10 rounded-xl bg-coral px-4 py-3.5 font-bold text-[rgb(var(--on-coral))] shadow-lg transition active:scale-[0.99]"
           >
             Zapisz zmiany
           </button>

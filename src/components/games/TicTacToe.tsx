@@ -69,7 +69,7 @@ export function TicTacToe({ isA, otherName, channel, onFinish }: GameProps) {
             disabled={Boolean(c) || !myTurn || over}
             className="grid aspect-square place-items-center rounded-2xl border border-line bg-surface text-3xl font-extrabold transition active:scale-95 disabled:cursor-default"
           >
-            <span className={c === mySym ? "text-coral" : "text-berry"}>{c}</span>
+            <span className={c === mySym ? "text-coraldeep" : "text-berry"}>{c}</span>
           </button>
         ))}
       </div>
@@ -77,7 +77,7 @@ export function TicTacToe({ isA, otherName, channel, onFinish }: GameProps) {
       {over && (
         <button
           onClick={onFinish}
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#14211C]"
+          className="rounded-xl bg-coral px-6 py-3 font-bold text-[rgb(var(--on-coral))]"
         >
           Odbierzcie punkty
         </button>

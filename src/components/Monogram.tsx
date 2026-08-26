@@ -18,8 +18,8 @@ export function Monogram({
 
   // Zieleń apki jako punkt wyjścia — odchylamy się od niej tylko trochę.
   const hue = 120 + ((h % 120) - 60) * 0.7;
-  const top = `hsl(${hue} 20% 26%)`;
-  const bottom = `hsl(${hue - 12} 24% 13%)`;
+  const top = `hsl(${hue} 52% 88%)`;
+  const bottom = `hsl(${hue - 14} 44% 74%)`;
   const letter = (name?.trim()?.[0] ?? "?").toUpperCase();
   const id = `mg${Math.round(hue)}`;
 
@@ -32,17 +32,17 @@ export function Monogram({
         </linearGradient>
       </defs>
       <rect width="100" height="100" fill={`url(#${id})`} />
-      <circle cx="50" cy="34" r="34" fill="#ffffff" opacity="0.04" />
+      <circle cx="50" cy="34" r="34" fill="#ffffff" opacity="0.35" />
       <text
         x="50"
         y="50"
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize="34"
+        fontSize="26"
         fontWeight="700"
         fontFamily="'Bricolage Grotesque', system-ui, sans-serif"
-        fill="#ffffff"
-        opacity="0.18"
+        fill={`hsl(${hue - 14} 38% 34%)`}
+        opacity="0.55"
       >
         {letter}
       </text>

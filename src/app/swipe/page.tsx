@@ -53,7 +53,7 @@ export default async function SwipePage() {
       <main className="mx-auto flex h-[100dvh] max-w-md flex-col px-4 pb-[76px] pt-4">
         <header className="mb-3 flex flex-none items-center justify-between px-1">
           <span className="font-display text-xl font-extrabold">
-            para<span className="text-coral">graf</span>
+            para<span className="text-coraldeep">graf</span>
           </span>
           <span className="font-mono text-[11px] uppercase tracking-wide text-inksoft">
             {(candidates ?? []).length} osób w pobliżu

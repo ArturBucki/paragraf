@@ -45,13 +45,13 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-bg">
           <ProfilePhoto profile={matched} />
         </div>
-        <h2 className="font-display text-3xl font-extrabold text-coral">To match!</h2>
+        <h2 className="font-display text-3xl font-extrabold text-coraldeep">To match!</h2>
         <p className="text-inksoft">
           Ty i {matched.name} polubiliście się nawzajem.
         </p>
         <Link
           href="/matches"
-          className="rounded-xl bg-coral px-6 py-3 font-bold text-[#14211C]"
+          className="rounded-xl bg-coral px-6 py-3 font-bold text-[rgb(var(--on-coral))]"
         >
           Wybierzcie grę →
         </Link>
@@ -100,7 +100,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="relative flex-1 overflow-hidden rounded-3xl border border-line bg-surface">
+      <div className="relative flex-1 overflow-hidden rounded-3xl bg-surface soft-2">
         <ProfilePhoto
           profile={current}
           index={at}
@@ -154,7 +154,7 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <VerifiedBadge verified={current.verified} onPhoto />
             {current.looking_for && (
-              <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#14211C]">
+              <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[rgb(var(--on-coral))]">
                 {current.looking_for}
               </span>
             )}
@@ -198,14 +198,14 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         <button
           onClick={onPass}
           aria-label="Pomiń"
-          className="grid h-16 w-16 place-items-center rounded-full border border-line bg-surface text-2xl text-inksoft transition active:scale-90"
+          className="grid h-16 w-16 place-items-center rounded-full bg-surface text-2xl text-inksoft soft-1 transition active:scale-90"
         >
           <Icon name="close" className="h-6 w-6" />
         </button>
         <button
           onClick={onLike}
           aria-label="Polub"
-          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[#14211C] transition active:scale-90"
+          className="grid h-16 w-16 place-items-center rounded-full bg-coral text-2xl text-[rgb(var(--on-coral))] soft-2 transition active:scale-90"
         >
           <Icon name="heart" className="h-7 w-7" filled />
         </button>

@@ -21,7 +21,7 @@ export function PhotoViewer({
   const index = Math.min(at, count - 1);
 
   return (
-    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-line bg-surface">
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-surface soft-2">
       <ProfilePhoto
         profile={profile}
         index={index}

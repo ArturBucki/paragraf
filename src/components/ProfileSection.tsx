@@ -31,7 +31,7 @@ export function Section({
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
         <span
           className={`grid h-9 w-9 flex-none place-items-center rounded-xl ${
-            full ? "bg-[#6FD3A6]/15 text-berry" : "bg-bg text-coral"
+            full ? "bg-berry/15 text-berry" : "bg-bg text-coraldeep"
           }`}
         >
           <Icon name={icon} className="h-5 w-5" />
@@ -42,7 +42,7 @@ export function Section({
         </span>
         <span
           className={`flex-none rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${
-            full ? "bg-[#6FD3A6]/20 text-berry" : "bg-bg text-gold"
+            full ? "bg-berry/20 text-berry" : "bg-bg text-gold"
           }`}
         >
           {done}/{total}

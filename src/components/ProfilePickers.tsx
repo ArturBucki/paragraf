@@ -131,7 +131,7 @@ export function InterestPicker({
         </p>
         <span
           className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-bold ${
-            full ? "bg-coral text-[#14211C]" : "bg-bg text-gold"
+            full ? "bg-coral text-[rgb(var(--on-coral))]" : "bg-bg text-gold"
           }`}
         >
           {sel.length}/{max}

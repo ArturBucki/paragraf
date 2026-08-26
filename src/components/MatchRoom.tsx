@@ -364,7 +364,7 @@ export function MatchRoom({
             <ProfilePhoto profile={other ?? null} />
           </div>
           {otherOnline && (
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-[#6FD3A6]" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-berry" />
           )}
         </Link>
         <Link href={other ? `/profil/${other.id}` : "#"} className="min-w-0 flex-1">
@@ -541,7 +541,7 @@ function Stream({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface text-3xl">
-          <Icon name="gamepad" className="h-8 w-8 text-coral" />
+          <Icon name="gamepad" className="h-8 w-8 text-coraldeep" />
         </div>
         <div>
           <p className="font-display text-xl font-extrabold">Zacznijcie od gry</p>
@@ -553,7 +553,7 @@ function Stream({
         <div className="flex gap-2">
           <button
             onClick={onRandom}
-            className="rounded-xl bg-coral px-5 py-3 font-bold text-[#14211C]"
+            className="rounded-xl bg-coral px-5 py-3 font-bold text-[rgb(var(--on-coral))]"
           >
             <span className="flex items-center gap-2"><Icon name="dice" className="h-5 w-5" /> Wylosuj grę</span>
           </button>
@@ -610,8 +610,8 @@ function Stream({
             <div
               className={`max-w-[78%] px-3.5 py-2 text-[15px] leading-snug ${
                 mine
-                  ? "ml-auto bg-coral text-[rgb(var(--on-coral))]"
-                  : "mr-auto bg-surface text-ink"
+                  ? "ml-auto bg-coral text-[rgb(var(--on-coral))] soft-1"
+                  : "mr-auto bg-surface text-ink soft-1"
               } ${
                 mine
                   ? `rounded-l-2xl ${startsGroup ? "rounded-tr-2xl" : "rounded-tr-md"} ${endsGroup ? "rounded-br-md" : "rounded-br-md"}`
@@ -680,12 +680,12 @@ function Composer({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Napisz coś…"
-        className="min-w-0 flex-1 rounded-full bg-surface px-4 py-3 text-[15px] outline-none placeholder:text-inksoft"
+        className="min-w-0 flex-1 rounded-full bg-surface px-4 py-3 text-[15px] outline-none soft-1 placeholder:text-inksoft"
       />
       <button
         type="submit"
         aria-label="Wyślij"
-        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[rgb(var(--on-coral))] transition active:scale-95"
+        className="grid h-11 w-11 flex-none place-items-center rounded-full bg-coral text-[rgb(var(--on-coral))] soft-2 transition active:scale-95"
       >
         <Icon name="send" className="h-5 w-5" filled />
       </button>
@@ -720,7 +720,7 @@ function GameScreen(props: {
           <Icon name="back" className="h-6 w-6" />
         </button>
         <div className="flex items-center gap-2.5">
-          {g && <Icon name={g.icon} className="h-6 w-6 text-coral" />}
+          {g && <Icon name={g.icon} className="h-6 w-6 text-coraldeep" />}
           <div>
             <div className="font-mono text-[10px] uppercase tracking-wide text-berry">
               {g?.tag}
@@ -752,7 +752,7 @@ function Dot({ label, on }: { label: string; on: boolean }) {
     >
       <span
         className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] ${
-          on ? "bg-[#6FD3A6] text-[#14211C]" : "border border-line"
+          on ? "bg-berry text-white" : "border border-line"
         }`}
       >
         {on ? "✓" : ""}

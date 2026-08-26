@@ -195,7 +195,7 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           />
           <button
             type="submit"
-            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[#14211C]"
+            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[rgb(var(--on-coral))]"
           >
             Zgaduj
           </button>

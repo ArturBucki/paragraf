@@ -5,29 +5,30 @@
 @tailwind utilities;
 
 /*
- * Paleta 70/20/10 — spokojna, matowa, jeden akcent.
+ * Paleta 70/20/10 — jasna i przyjazna („bajkowa”).
  *
- *  70%  #0F1A16  grunt        — głęboka, wygaszona zieleń (prawie czerń)
- *  20%  #17241F  powierzchnie — karty, bąbelki, pola; plus jasny tekst
- *  10%  #FF7A5C  koral        — WYŁĄCZNIE akcje i to, co ma przyciągnąć wzrok
+ *  70%  #FFF7EC  krem        — grunt, ciepły papier
+ *  20%  #FFFFFF  biel        — karty, bąbelki, pola; plus granatowy tekst
+ *  10%  #F5A524  miodowy     — WYŁĄCZNIE akcje i to, co ma przyciągnąć wzrok
  *
- * Mięta jest zarezerwowana dla stanu (online, gotowe, zweryfikowany),
- * piaskowy dla punktów. Kolory gier są celowo wygaszone i zestrojone —
- * mają odróżniać gry, a nie krzyczeć.
+ * Nazwy tokenów zostały z poprzedniej wersji, żeby nie przepisywać całej apki:
+ *   --coral       = akcent (miodowy)        --coral-deep = ten sam kolor jako TEKST
+ *   --berry       = stan pozytywny (zieleń) --gold       = drugi kolor (granatowy błękit)
+ * Kolory tekstu są dobrane pod kontrast ≥ 4.9:1 na kremie i na bieli.
  */
 :root {
   /* Kanały RGB, nie hexy — dzięki temu działa przezroczystość (bg-coral/20). */
-  --bg: 17 28 24; /* #111C18 */
-  --surface: 26 40 35; /* #1A2823 */
-  --surface-2: 35 51 44; /* #23332C */
-  --ink: 236 241 237; /* #ECF1ED */
-  --ink-soft: 147 167 156; /* #93A79C */
-  --line: 51 71 62; /* #33473E */
-  --coral: 255 122 92; /* #FF7A5C */
-  --coral-deep: 255 157 133; /* #FF9D85 */
-  --berry: 111 211 166; /* #6FD3A6 */
-  --gold: 200 169 106; /* #C8A96A */
-  --on-coral: 20 33 28; /* #14211C */
+  --bg: 255 247 236; /* #FFF7EC */
+  --surface: 255 255 255; /* #FFFFFF */
+  --surface-2: 253 241 223; /* #FDF1DF */
+  --ink: 35 48 92; /* #23305C */
+  --ink-soft: 95 106 146; /* #5F6A92 */
+  --line: 239 227 210; /* #EFE3D2 */
+  --coral: 245 165 36; /* #F5A524 */
+  --coral-deep: 143 92 0; /* #8F5C00 — wersja do tekstu */
+  --berry: 21 122 89; /* #157A59 */
+  --gold: 70 87 196; /* #4657C4 */
+  --on-coral: 42 27 0; /* #2A1B00 */
 }
 
 html,
@@ -76,9 +77,10 @@ textarea::placeholder {
 /* Pole formularza — jeden wygląd dla input/textarea/select w całej apce. */
 .input {
   width: 100%;
-  border-radius: 0.75rem;
+  border-radius: 0.9rem;
   border: 1px solid rgb(var(--line));
   background: rgb(var(--surface));
+  box-shadow: 0 1px 3px rgb(60 40 20 / 0.05);
   padding: 0.75rem 0.875rem;
   font-size: 0.95rem;
   line-height: 1.4;
@@ -93,10 +95,19 @@ textarea::placeholder {
 .input:focus {
   outline: none;
   border-color: rgb(var(--coral));
-  background: rgb(var(--surface-2));
+  box-shadow: 0 0 0 3px rgb(var(--coral) / 0.22);
 }
 
 textarea.input {
   resize: vertical;
   min-height: 5.5rem;
+}
+
+/* Delikatna głębia zamiast obrysów — w jasnym motywie to ona buduje warstwy. */
+.soft-1 {
+  box-shadow: 0 1px 2px rgb(90 60 20 / 0.05), 0 2px 8px rgb(90 60 20 / 0.05);
+}
+
+.soft-2 {
+  box-shadow: 0 2px 4px rgb(90 60 20 / 0.05), 0 8px 22px rgb(90 60 20 / 0.09);
 }

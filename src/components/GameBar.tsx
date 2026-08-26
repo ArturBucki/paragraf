@@ -34,11 +34,11 @@ export function GameBar({
     return (
       <button
         onClick={() => onStart(ready.id)}
-        className="mb-2 flex w-full items-center gap-3 rounded-2xl border-2 border-[#6FD3A6] bg-[#6FD3A6]/15 px-3 py-3 text-left transition active:scale-[0.99]"
+        className="mb-2 flex w-full items-center gap-3 rounded-2xl border-2 border-[#6FD3A6] bg-berry/15 px-3 py-3 text-left transition active:scale-[0.99]"
       >
-        <span className="relative flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[#6FD3A6]/20">
+        <span className="relative flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-berry/20">
           <Icon name={ready.icon} className="h-5 w-5 text-berry" />
-          <span className="absolute inset-0 animate-ping rounded-xl bg-[#6FD3A6]/25" />
+          <span className="absolute inset-0 animate-ping rounded-xl bg-berry/25" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-extrabold leading-tight">
@@ -49,7 +49,7 @@ export function GameBar({
             <Ready label={otherName} on />
           </span>
         </span>
-        <span className="flex-none rounded-full bg-[#6FD3A6] px-4 py-2 text-sm font-extrabold text-[#14211C]">
+        <span className="flex-none rounded-full bg-berry px-4 py-2 text-sm font-extrabold text-white">
           START
         </span>
       </button>
@@ -75,7 +75,7 @@ export function GameBar({
             <Ready label={otherName} on />
           </span>
         </span>
-        <span className="flex-none rounded-full bg-berry px-3.5 py-2 text-xs font-extrabold text-[#14211C]">
+        <span className="flex-none rounded-full bg-berry px-3.5 py-2 text-xs font-extrabold text-white">
           Wchodzę
         </span>
       </button>
@@ -130,7 +130,7 @@ export function GameBar({
             : "dziś z bonusem punktowym"}
         </span>
       </span>
-      <span className="flex-none rounded-full bg-coral px-3.5 py-2 text-xs font-extrabold text-[#14211C]">
+      <span className="flex-none rounded-full bg-coral px-3.5 py-2 text-xs font-extrabold text-[rgb(var(--on-coral))]">
         Wybierz
       </span>
     </button>
@@ -143,7 +143,7 @@ function Ready({ label, on }: { label: string; on: boolean }) {
     <span className={`flex items-center gap-1 ${on ? "text-berry" : "text-inksoft"}`}>
       <span
         className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] font-bold ${
-          on ? "bg-[#6FD3A6] text-[#14211C]" : "border border-line"
+          on ? "bg-berry text-white" : "border border-line"
         }`}
       >
         {on ? "✓" : ""}

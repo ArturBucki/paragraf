@@ -77,12 +77,12 @@ function RailItem({
 
   // Tło mówi, kto chce grać — bez czytania czegokolwiek.
   const tile = both
-    ? "bg-berry text-[#14211C]"
+    ? "bg-berry text-white"
     : theirs
       ? "bg-berry/20 text-berry ring-1 ring-berry"
       : mine
-        ? "bg-coral/20 text-coral ring-1 ring-coral"
-        : "bg-surface text-inksoft";
+        ? "bg-coral/20 text-coraldeep ring-1 ring-coral"
+        : "bg-surface text-inksoft soft-1";
 
   return (
     <button

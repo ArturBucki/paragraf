@@ -147,7 +147,7 @@ export function GameWheel({
       </div>
 
       {landed ? (
-        <div className="flex items-center gap-2 rounded-full bg-[#6FD3A6] px-4 py-2 text-sm font-bold text-[#14211C]">
+        <div className="flex items-center gap-2 rounded-full bg-berry px-4 py-2 text-sm font-bold text-white">
           <Icon name={landed.icon} className="h-4 w-4" />
           {landed.name}
         </div>
@@ -155,7 +155,7 @@ export function GameWheel({
         <button
           onClick={spin}
           disabled={spinning}
-          className="rounded-full bg-coral px-8 py-3 font-bold text-[#14211C] transition active:scale-95 disabled:opacity-60"
+          className="rounded-full bg-coral px-8 py-3 font-bold text-[rgb(var(--on-coral))] transition active:scale-95 disabled:opacity-60"
         >
           {spinning ? "Kręci się…" : "Zakręćcie kołem"}
         </button>

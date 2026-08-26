@@ -12,7 +12,7 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-2 overflow-hidden rounded-2xl bg-surface">
+    <div className="mb-2 overflow-hidden rounded-2xl bg-surface soft-2">
       <span className="block h-[3px] w-full" style={{ background: accent }} />
       <div className="p-3">{children}</div>
     </div>
@@ -153,7 +153,7 @@ export function GameReady({
         </div>
         <button
           onClick={onStart}
-          className="flex-none rounded-xl bg-berry px-5 py-2.5 text-sm font-bold text-[rgb(var(--on-coral))] transition active:scale-95"
+          className="flex-none rounded-xl bg-berry px-5 py-2.5 text-sm font-bold text-white transition active:scale-95"
         >
           Start
         </button>

@@ -17,8 +17,8 @@ export function VerifiedBadge({
       <span
         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
           onPhoto
-            ? "bg-[#6FD3A6] text-[#14211C]"
-            : "bg-[#6FD3A6]/18 text-berry"
+            ? "bg-berry text-white"
+            : "bg-berry/18 text-berry"
         }`}
       >
         <Icon name="verified" className="h-3.5 w-3.5" />
