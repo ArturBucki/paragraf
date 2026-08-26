@@ -6,6 +6,7 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ProfileForm } from "@/components/ProfileForm";
+import { DangerZone } from "@/components/DangerZone";
 import type { Profile } from "@/lib/types";
 import { signOut } from "./actions";
 
@@ -78,10 +79,14 @@ export default async function Settings() {
               Wyloguj się
             </button>
           </form>
-          <p className="text-center text-[11px] text-inksoft">
-            paragraf · wersja wczesna
-          </p>
         </section>
+
+        <DangerZone userId={user.id} photos={profile?.photos ?? []} />
+
+        <p className="text-center text-[11px] text-inksoft">
+          paragraf · wersja wczesna
+        </p>
+
       </main>
       <BottomNav />
     </>

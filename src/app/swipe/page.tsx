@@ -19,15 +19,18 @@ export default async function SwipePage() {
 
   if (!me || !me.name) redirect("/onboarding");
 
-  const [{ data: liked }, { data: passed }] = await Promise.all([
+  const [{ data: liked }, { data: passed }, { data: hidden }] = await Promise.all([
     supabase.from("likes").select("liked").eq("liker", user.id),
     supabase.from("passes").select("passed").eq("passer", user.id),
+    // Blokady działają w obie strony — funkcja zwraca jedną wspólną listę.
+    supabase.rpc("hidden_users"),
   ]);
 
   const seen = [
     user.id,
     ...(liked ?? []).map((r) => r.liked),
     ...(passed ?? []).map((r) => r.passed),
+    ...((hidden ?? []) as string[]),
   ];
 
   // „Pokazuj mi" z ustawień naprawdę zawęża talię.

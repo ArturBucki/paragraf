@@ -26,6 +26,10 @@ export default async function MatchPage({
 
   const otherId = match.user_a === user.id ? match.user_b : match.user_a;
 
+  // Blokada zamyka rozmowę także przy wejściu z linku.
+  const { data: hidden } = await supabase.rpc("hidden_users");
+  if (((hidden ?? []) as string[]).includes(otherId)) redirect("/matches");
+
   const [{ data: other }, { data: games }, { data: messages }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", otherId).maybeSingle(),
     supabase.from("match_games").select("*").eq("match_id", params.id),

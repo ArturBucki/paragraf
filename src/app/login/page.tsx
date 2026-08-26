@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Zgoda jest warunkiem założenia konta — 18+ i akceptacja obu dokumentów.
+  const [agreed, setAgreed] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,7 +22,22 @@ export default function LoginPage() {
     setMsg(null);
 
     if (mode === "up") {
-      const { error } = await supabase.auth.signUp({ email, password });
+      if (!agreed) {
+        setMsg("Zaznacz zgodę, żeby założyć konto.");
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        // Ślad zgody zostaje przy koncie — kiedy i na co ktoś się zgodził.
+        options: {
+          data: {
+            terms_accepted_at: new Date().toISOString(),
+            adult_confirmed: true,
+          },
+        },
+      });
       if (error) {
         setMsg(error.message);
         setLoading(false);
@@ -59,7 +77,7 @@ export default function LoginPage() {
           placeholder="E-mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-line bg-surface px-4 py-3"
+          className="input"
         />
         <input
           type="password"
@@ -68,12 +86,34 @@ export default function LoginPage() {
           placeholder="Hasło (min. 6 znaków)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="rounded-xl border border-line bg-surface px-4 py-3"
+          className="input"
         />
+        {mode === "up" && (
+          <label className="flex items-start gap-2.5 px-1 text-[12px] leading-relaxed text-inksoft">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-none accent-[rgb(var(--coral))]"
+            />
+            <span>
+              Mam ukończone 18 lat, akceptuję{" "}
+              <Link href="/regulamin" className="underline">
+                regulamin
+              </Link>{" "}
+              i{" "}
+              <Link href="/prywatnosc" className="underline">
+                politykę prywatności
+              </Link>
+              .
+            </span>
+          </label>
+        )}
+
         <button
           type="submit"
-          disabled={loading}
-          className="rounded-xl bg-coral px-4 py-3 font-bold text-[rgb(var(--on-coral))] disabled:opacity-60"
+          disabled={loading || (mode === "up" && !agreed)}
+          className="rounded-xl bg-coral px-4 py-3 font-bold text-[rgb(var(--on-coral))] disabled:opacity-50"
         >
           {loading ? "…" : mode === "in" ? "Wejdź" : "Utwórz konto"}
         </button>

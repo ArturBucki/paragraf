@@ -61,7 +61,7 @@ export function ProfilePreview({ profile }: { profile: Profile }) {
           </p>
         </>
       ) : (
-        <ProfileView profile={profile} backHref="/settings" embedded />
+        <ProfileView profile={profile} backHref="/settings" embedded self />
       )}
     </div>
   );

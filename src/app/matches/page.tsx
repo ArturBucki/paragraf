@@ -11,13 +11,20 @@ export default async function MatchesPage() {
   if (!user) redirect("/login");
   const supabase = createClient();
 
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("*")
-    .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
-    .order("created_at", { ascending: false });
+  const [{ data: matches }, { data: hidden }] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("*")
+      .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
+      .order("created_at", { ascending: false }),
+    supabase.rpc("hidden_users"),
+  ]);
 
-  const list = matches ?? [];
+  // Zablokowana para znika z listy — z obu stron, bez śladu.
+  const blocked = new Set(((hidden ?? []) as string[]) ?? []);
+  const list = (matches ?? []).filter(
+    (m) => !blocked.has(m.user_a === user.id ? m.user_b : m.user_a),
+  );
   const ids = list.map((m) => m.id);
   const otherIds = list.map((m) => (m.user_a === user.id ? m.user_b : m.user_a));
 

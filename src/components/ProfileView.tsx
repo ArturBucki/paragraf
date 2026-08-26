@@ -4,6 +4,7 @@ import { INTEREST_GROUPS } from "@/lib/types";
 import { Icon, type IconName } from "@/components/Icon";
 import { PhotoViewer } from "@/components/PhotoViewer";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { SafetyMenu } from "@/components/SafetyMenu";
 
 /** Kolor po grupie — te same barwy co przy wybieraniu w ustawieniach. */
 const ACCENT = new Map<string, string>(
@@ -19,6 +20,7 @@ export function ProfileView({
   backHref,
   matchHref,
   embedded = false,
+  self = false,
 }: {
   profile: Profile;
   backHref: string;
@@ -26,6 +28,8 @@ export function ProfileView({
   matchHref?: string;
   /** W podglądzie własnego profilu nagłówek jest wyżej — tu go nie powtarzamy. */
   embedded?: boolean;
+  /** Własny profil — bez blokowania i zgłaszania samego siebie. */
+  self?: boolean;
 }) {
   const meta: { icon: IconName; text: string }[] = [];
   if (profile.city) meta.push({ icon: "pin", text: profile.city });
@@ -60,6 +64,7 @@ export function ProfileView({
           <Icon name="back" className="h-5 w-5" />
         </Link>
         <span className="min-w-0 flex-1" />
+        {!self && <SafetyMenu otherId={profile.id} otherName={profile.name} />}
         {matchHref && (
           <Link
             href={matchHref}

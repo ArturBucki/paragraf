@@ -11,6 +11,7 @@ import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
 import { GamePicker } from "@/components/GamePicker";
 import { GameStrip } from "@/components/GameStrip";
+import { SafetyMenu } from "@/components/SafetyMenu";
 import { GameWheel } from "@/components/GameWheel";
 import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
@@ -434,6 +435,9 @@ export function MatchRoom({
         <span className="flex flex-none items-center gap-1 font-mono text-xs font-bold text-gold">
           <Icon name="spark" className="h-3.5 w-3.5" /> {points}
         </span>
+        {other && (
+          <SafetyMenu otherId={other.id} otherName={otherName} matchId={matchId} />
+        )}
       </header>
 
       {/* rozmowa na pełną szerokość, wybór gry tuż nad polem wiadomości */}

@@ -26,7 +26,10 @@ export type IconName =
   | "ruler"
   | "info"
   | "verified"
-  | "eye";
+  | "eye"
+  | "more"
+  | "flag"
+  | "ban";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // Talia kart — odkrywanie
@@ -163,6 +166,28 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z" />
       <circle cx="12" cy="12" r="2.9" />
+    </>
+  ),
+  // Więcej opcji
+  more: (
+    <>
+      <circle cx="6" cy="12" r="1.35" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="12" r="1.35" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // Zgłoszenie — chorągiewka
+  flag: (
+    <>
+      <path d="M6 20.5V4.2" />
+      <path d="M6 5.2h9.6l-1.5 3.1 1.5 3.1H6" />
+    </>
+  ),
+  // Blokada — przekreślone kółko
+  ban: (
+    <>
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M6.1 6.1l11.8 11.8" />
     </>
   ),
   // Wzrost — miarka
