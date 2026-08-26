@@ -72,14 +72,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   // Puzzel — zagadka we dwoje
   puzzle: (
-    <path d="M10 4h4a1 1 0 0 1 1 1v1.4a1.8 1.8 0 1 0 3.6 0V5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1.4a1.8 1.8 0 1 0 0 3.6H19a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-4.6a1.8 1.8 0 1 0-3.6 0H6a1 1 0 0 1-1-1v-4.6a1.8 1.8 0 1 0 0-3.6V5a1 1 0 0 1 1-1h3a1.8 1.8 0 1 0 1 0Z" />
+    <path d="M5 8.6a1.6 1.6 0 0 1 1.6-1.6h2.2a2 2 0 1 1 4 0h2.6A1.6 1.6 0 0 1 17 8.6v2.6a2 2 0 1 1 0 4V18a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 18v-3.4a2 2 0 1 0 0-4Z" />
   ),
-  // Siatka z kółkiem i krzyżykiem
+  // Kółko i krzyżyk — równa siatka, jedno kółko, jeden krzyżyk
   grid: (
     <>
-      <path d="M4.5 10.4h15M4.5 15.1h15M10.4 4.5v15M15.1 4.5v15" opacity="0.55" />
-      <circle cx="7.4" cy="7.4" r="1.7" />
-      <path d="M16.6 16.6l3 3M19.6 16.6l-3 3" />
+      <path d="M4.6 10.2h14.8M4.6 14.6h14.8M9.8 4.6v14.8M14.2 4.6v14.8" opacity="0.4" />
+      <circle cx="7.2" cy="7.4" r="1.6" />
+      <path d="M15.9 16.1l2.6 2.6M18.5 16.1l-2.6 2.6" />
     </>
   ),
   // Pędzel — wspólne rysowanie
@@ -92,16 +92,18 @@ const PATHS: Record<IconName, React.ReactNode> = {
   // Klucz — escape room
   key: (
     <>
-      <circle cx="8" cy="8" r="4" />
-      <path d="M10.9 10.9 20 20M17 17l-1.9 1.9M14.2 14.2l-1.9 1.9" />
+      <circle cx="8.4" cy="8.4" r="3.9" />
+      <circle cx="8.4" cy="8.4" r="1.15" fill="currentColor" stroke="none" />
+      <path d="M11.2 11.2 19.6 19.6" />
+      <path d="M17.2 17.2l-2 2M14.6 14.6l-2 2" />
     </>
   ),
-  // Maski — dwie prawdy, jedno kłamstwo
+  // Dwie prawdy, jedno kłamstwo — dwie karty, na wierzchniej ptaszek
   masks: (
     <>
-      <path d="M3.5 6.5h8v5.2a4 4 0 0 1-8 0Z" />
-      <path d="M12.5 6.5h8v5.2a4 4 0 0 1-6.7 3" />
-      <path d="M6 9.2h.01M9 9.2h.01M16 9.2h.01M19 9.2h.01" />
+      <rect x="3.4" y="6.6" width="10.4" height="13" rx="2.4" />
+      <path d="M8.2 4.4h9.2a2.4 2.4 0 0 1 2.4 2.4v9" />
+      <path d="M6.2 13.4l2.1 2.1 3.4-3.7" />
     </>
   ),
   // Pad — wybór gry

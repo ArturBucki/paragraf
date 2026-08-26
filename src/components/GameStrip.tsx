@@ -1,7 +1,7 @@
 "use client";
 
 import { GAMES, gameOfTheDay, DAILY_BONUS, type Game } from "@/lib/games";
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
 
 type RowState = {
   mine: boolean;
@@ -12,9 +12,10 @@ type RowState = {
 
 /**
  * Wybór gry tuż nad polem wiadomości — poziomy pasek z NAZWAMI.
- * Ikona bez podpisu zmuszała do zgadywania, a pionowy pasek zabierał
- * szerokość rozmowie. Tutaj widać, co to za gra, ile trwa i co daje,
- * a zablokowane mówią wprost, ile brakuje.
+ *
+ * WAŻNE: kolejność nie zależy od tego, kto co kliknął. Gdyby zależała,
+ * plakietka po kliknięciu uciekałaby w inne miejsce i trzeba by jej szukać.
+ * Stan pokazujemy kolorem i obwódką — pozycja zostaje ta sama.
  */
 export function GameStrip({
   matchId,
@@ -37,25 +38,20 @@ export function GameStrip({
   // Za zagraną grę punktów i tak nie ma, więc nie udajemy, że bonus czeka.
   const dailyId = stateFor(proposed.id).played ? null : proposed.id;
 
-  /*
-   * Kolejność mówi, co jest teraz ważne:
-   * najpierw to, na co ktoś czeka, potem propozycja na dziś,
-   * dalej gry jeszcze niegrane, na końcu zagrane i zamknięte.
-   */
+  // Kolejność zależy tylko od rzeczy, które nie zmieniają się przy kliknięciu.
   const rank = (g: Game) => {
     const st = stateFor(g.id);
-    if (st.mine && st.theirs) return 0;
-    if (st.theirs) return 1;
-    if (st.mine) return 2;
-    if (st.locked) return 6;
-    if (g.id === dailyId) return 3;
-    return st.played ? 5 : 4;
+    if (st.locked) return 3;
+    if (g.id === dailyId) return 0;
+    return st.played ? 2 : 1;
   };
-  const ordered = [...GAMES].sort((a, b) => rank(a) - rank(b));
+  const ordered = [...GAMES].sort(
+    (a, b) => rank(a) - rank(b) || GAMES.indexOf(a) - GAMES.indexOf(b),
+  );
 
   return (
     <div className="relative -mx-4 mb-2">
-      <div className="flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-2 overflow-x-auto px-4 pb-1.5 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {ordered.map((g) => (
           <Chip
             key={g.id}
@@ -66,24 +62,37 @@ export function GameStrip({
           />
         ))}
 
-        <button
-          onClick={onRandom}
-          className="flex flex-none items-center gap-1.5 rounded-full bg-surface px-3.5 py-2 text-[13px] font-semibold text-inksoft soft-1 transition active:scale-95"
-        >
-          <Icon name="dice" className="h-4 w-4 text-gold" />
-          Losuj
-        </button>
-        <button
-          onClick={onOpenAll}
-          className="flex-none rounded-full bg-surface px-3.5 py-2 text-[13px] font-semibold text-inksoft soft-1 transition active:scale-95"
-        >
-          Wszystkie
-        </button>
+        <Plain icon="dice" label="Losuj" tint="#B9770B" onClick={onRandom} />
+        <Plain icon="gamepad" label="Wszystkie" tint="#4657C4" onClick={onOpenAll} />
       </div>
 
       {/* Delikatne zanikanie na krawędzi — sygnał, że pasek się przewija. */}
-      <span className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-bg to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-bg to-transparent" />
     </div>
+  );
+}
+
+/** Ikona w kolorowej płytce — ten sam rytm w każdej plakietce. */
+function Badge({
+  name,
+  tint,
+  solid,
+}: {
+  name: IconName;
+  tint: string;
+  solid?: boolean;
+}) {
+  return (
+    <span
+      className="grid h-7 w-7 flex-none place-items-center rounded-[10px]"
+      style={
+        solid
+          ? { background: "rgb(255 255 255 / 0.22)", color: "#fff" }
+          : { background: `${tint}1F`, color: tint }
+      }
+    >
+      <Icon name={name} className="h-4 w-4" />
+    </span>
   );
 }
 
@@ -101,17 +110,17 @@ function Chip({
   const { mine, theirs, played, locked } = state;
   const both = mine && theirs;
 
+  // Ramka, nie ring — ring w Tailwindzie to cień, a cień mamy już w .soft-1.
   const skin = both
-    ? "bg-berry text-white"
+    ? "border-berry bg-berry text-white shadow-[0_6px_16px_rgb(21_122_89_/_0.30)]"
     : theirs
-      ? "bg-berry/18 text-berry ring-1 ring-berry"
+      ? "border-berry bg-berry/10 text-ink soft-1"
       : mine
-        ? "bg-coral/25 text-ink ring-1 ring-coral"
+        ? "border-coral bg-coral/12 text-ink soft-1"
         : locked
-          ? "bg-surface text-inksoft opacity-70"
-          : "bg-surface text-ink soft-1";
+          ? "border-[rgb(var(--ink)/0.07)] bg-surface/70 text-inksoft"
+          : "border-[rgb(var(--ink)/0.07)] bg-surface text-ink soft-1";
 
-  // Prawa część plakietki: stan gry albo to, co warto wiedzieć przed kliknięciem.
   const note = both
     ? "start"
     : theirs
@@ -124,30 +133,58 @@ function Chip({
             ? `+${game.pts + DAILY_BONUS}`
             : played
               ? "zagrane"
-              : `${game.time}`;
+              : game.time;
 
   return (
     <button
       onClick={() => onPick(game.id)}
-      className={`flex flex-none items-center gap-2 rounded-full py-2 pl-3 pr-3.5 text-[13px] font-semibold transition active:scale-95 ${skin}`}
+      className={`flex flex-none items-center gap-2 rounded-2xl border-2 py-1.5 pl-1.5 pr-3.5 text-[13px] font-semibold transition active:scale-95 ${skin}`}
     >
-      <span style={{ color: both ? undefined : locked ? undefined : game.accent }}>
-        <Icon name={locked ? "lock" : game.icon} className="h-4 w-4" />
+      <Badge name={locked ? "lock" : game.icon} tint={game.accent} solid={both} />
+
+      <span className="flex items-center gap-1.5">
+        {game.short}
+        {daily && !mine && !theirs && (
+          <Icon name="spark" className="h-3 w-3 text-gold" />
+        )}
       </span>
-
-      <span>{game.short}</span>
-
-      {daily && !locked && !mine && !theirs && (
-        <Icon name="spark" className="h-3 w-3 text-gold" />
-      )}
 
       <span
         className={`text-[11px] font-bold ${
-          both || theirs ? "opacity-90" : "opacity-60"
+          both
+            ? "opacity-90"
+            : theirs
+              ? "text-berry"
+              : mine
+                ? "text-coraldeep"
+                : "opacity-55"
         }`}
       >
         {note}
       </span>
+    </button>
+  );
+}
+
+/** Plakietka bez stanu — losowanie i pełna półka gier. */
+function Plain({
+  icon,
+  label,
+  tint,
+  onClick,
+}: {
+  icon: IconName;
+  label: string;
+  tint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-none items-center gap-2 rounded-2xl border-2 border-[rgb(var(--ink)/0.07)] bg-surface py-1.5 pl-1.5 pr-3.5 text-[13px] font-semibold text-inksoft soft-1 transition active:scale-95"
+    >
+      <Badge name={icon} tint={tint} />
+      {label}
     </button>
   );
 }
