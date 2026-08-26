@@ -12,6 +12,7 @@ import { Icon } from "@/components/Icon";
 import { GamePicker } from "@/components/GamePicker";
 import { GameStrip } from "@/components/GameStrip";
 import { SafetyMenu } from "@/components/SafetyMenu";
+import { PeerStatus } from "@/components/PeerStatus";
 import { GameWheel } from "@/components/GameWheel";
 import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
@@ -87,6 +88,10 @@ export function MatchRoom({
    * sygnał startu do niej nie dociera i wchodzisz do gry we dwoje sam.
    */
   const [inRoom, setInRoom] = useState<Set<string>>(new Set());
+  /* „pisze…" — sygnał ulotny, więc leci broadcastem i sam gaśnie po chwili. */
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingOff = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingSent = useRef(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   /*
@@ -167,6 +172,7 @@ export function MatchRoom({
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
         (payload) => {
           const m = payload.new as Message;
+          if (m.sender !== meId) setOtherTyping(false);
           setMessages((prev) => {
             if (prev.some((x) => x.id === m.id)) return prev;
             // Usuń wersję optymistyczną (ujemne id), gdy dotrze prawdziwa.
@@ -191,6 +197,11 @@ export function MatchRoom({
           setActive(payload.gameId as string);
         }
       })
+      .on("broadcast", { event: "typing" }, () => {
+        setOtherTyping(true);
+        if (typingOff.current) clearTimeout(typingOff.current);
+        typingOff.current = setTimeout(() => setOtherTyping(false), 3200);
+      })
       .on("presence", { event: "sync" }, () => {
         setInRoom(new Set(Object.keys(ch.presenceState())));
       })
@@ -207,6 +218,7 @@ export function MatchRoom({
 
     channelRef.current = ch;
     return () => {
+      if (typingOff.current) clearTimeout(typingOff.current);
       supabase.removeChannel(ch);
       channelRef.current = null;
     };
@@ -313,6 +325,14 @@ export function MatchRoom({
     optimisticToggle(RANDOM_ID);
     enqueue(() => supabase.rpc("pick_game", { p_match: matchId, p_game: RANDOM_ID }));
   }
+
+  /** Mówi drugiej stronie „piszę" — rzadziej niż co znak, żeby nie zalać kanału. */
+  const sendTyping = useCallback(() => {
+    const now = Date.now();
+    if (now - typingSent.current < 1800) return;
+    typingSent.current = now;
+    channelRef.current?.send({ type: "broadcast", event: "typing", payload: {} });
+  }, []);
 
   /** Kasuje chęć obojga dla jednej gry (odmowa, rezygnacja z losowania). */
   const clearWants = useCallback(
@@ -434,8 +454,13 @@ export function MatchRoom({
           <div className="h-full w-full overflow-hidden rounded-full">
             <ProfilePhoto profile={other ?? null} />
           </div>
-          {otherOnline && (
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg bg-berry" />
+          {/* Kropka jak w komunikatorach: zielona = tu jest, złota = w apce. */}
+          {(otherInRoom || otherOnline) && (
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg ${
+                otherInRoom ? "bg-berry" : "bg-gold"
+              }`}
+            />
           )}
         </Link>
         <Link href={other ? `/profil/${other.id}` : "#"} className="min-w-0 flex-1">
@@ -511,6 +536,8 @@ export function MatchRoom({
           />
         ) : null}
 
+        <PeerStatus other={other} inRoom={otherInRoom} typing={otherTyping} />
+
         <GameStrip
           matchId={matchId}
           today={today}
@@ -525,6 +552,7 @@ export function MatchRoom({
           matchId={matchId}
           meId={meId}
           locked={!playedAny}
+          onTyping={sendTyping}
           onOpenGames={() => setSheet(true)}
           onOptimistic={(body) =>
             setMessages((prev) => [
@@ -707,6 +735,7 @@ function Composer({
   meId,
   locked,
   onOpenGames,
+  onTyping,
   onOptimistic,
   onFailed,
 }: {
@@ -714,6 +743,7 @@ function Composer({
   meId: string;
   locked: boolean;
   onOpenGames: () => void;
+  onTyping: () => void;
   onOptimistic: (body: string) => void;
   onFailed: (body: string) => void;
 }) {
@@ -753,7 +783,10 @@ function Composer({
     <form onSubmit={submit} className="mb-2 flex items-center gap-2">
       <input
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          if (e.target.value.trim()) onTyping();
+        }}
         placeholder="Napisz coś…"
         className="min-w-0 flex-1 rounded-full bg-surface px-4 py-3 text-[15px] outline-none soft-1 placeholder:text-inksoft"
       />
