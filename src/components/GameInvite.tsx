@@ -6,14 +6,20 @@ import { Icon } from "@/components/Icon";
 /** Wspólna skorupa: cicha karta z cienkim paskiem w kolorze gry. */
 function Shell({
   accent,
+  waiting,
   children,
 }: {
   accent: string;
+  /** Powolny przejazd światła po pasku — „trwa", a nie „uwaga!". */
+  waiting?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="mb-2 overflow-hidden rounded-2xl bg-surface soft-2">
-      <span className="block h-[3px] w-full" style={{ background: accent }} />
+      <span
+        className={`block w-full ${waiting ? "h-1 wait-bar" : "h-[3px]"}`}
+        style={{ background: accent }}
+      />
       <div className="p-3">{children}</div>
     </div>
   );
@@ -94,14 +100,13 @@ export function GameWaiting({
   onCancel: () => void;
 }) {
   return (
-    <Shell accent={game.accent}>
+    <Shell accent={game.accent} waiting>
       <div className="flex items-center gap-3">
         <span
-          className="relative grid h-10 w-10 flex-none place-items-center rounded-xl"
+          className="breathe grid h-10 w-10 flex-none place-items-center rounded-xl"
           style={{ background: `${game.accent}18`, color: game.accent }}
         >
           <Icon name={game.icon} className="h-5 w-5" />
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-coral" />
         </span>
 
         <div className="min-w-0 flex-1">

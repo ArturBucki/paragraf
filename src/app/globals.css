@@ -111,3 +111,60 @@ textarea.input {
 .soft-2 {
   box-shadow: 0 2px 4px rgb(90 60 20 / 0.05), 0 8px 22px rgb(90 60 20 / 0.09);
 }
+
+/*
+ * „W toku" bez migania.
+ * Pulsująca kropka (animate-ping) przyciągała wzrok jak alarm — a zaproszenie,
+ * które czeka, to nie alarm. Zamiast tego jeden powolny przejazd światła
+ * po pasku karty: widać, że coś trwa, ale nic nie skacze w kadrze.
+ */
+@keyframes sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  60%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.wait-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.wait-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 15%,
+    rgb(255 255 255 / 0.95) 50%,
+    transparent 85%
+  );
+  animation: sweep 2.4s ease-in-out infinite;
+}
+
+/* Delikatne „oddychanie" — dla ikony gry, na którą czekamy. */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.breathe {
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+/* Kto woli bez ruchu — dostaje bez ruchu. */
+@media (prefers-reduced-motion: reduce) {
+  .wait-bar::after,
+  .breathe {
+    animation: none;
+  }
+}
