@@ -147,6 +147,11 @@ export function MatchRoom({
     };
   }, [supabase, matchId]);
 
+  /**
+   * Zaznacza moją chęć na jedną grę — i kasuje poprzednią.
+   * Jedna gra na raz: druga osoba dostaje jedno jasne pytanie,
+   * a nie kolejkę zaproszeń.
+   */
   function optimisticToggle(gameId: string) {
     setRows((prev) => {
       const row = prev.find((r) => r.game_id === gameId) ?? {
@@ -155,10 +160,16 @@ export function MatchRoom({
         b_wants: false,
         played: false,
       };
-      const nextRow = isA
-        ? { ...row, a_wants: !row.a_wants }
-        : { ...row, b_wants: !row.b_wants };
-      return [...prev.filter((r) => r.game_id !== gameId), nextRow];
+      const on = !(isA ? row.a_wants : row.b_wants);
+
+      const others = prev
+        .filter((r) => r.game_id !== gameId)
+        .map((r) =>
+          on ? { ...r, ...(isA ? { a_wants: false } : { b_wants: false }) } : r,
+        );
+
+      const nextRow = isA ? { ...row, a_wants: on } : { ...row, b_wants: on };
+      return [...others, nextRow];
     });
   }
 
@@ -175,10 +186,11 @@ export function MatchRoom({
         return;
       }
     }
+    const snapshot = rows;
     optimisticToggle(gameId);
     const res = await toggleWantGame(matchId, gameId);
     if (!res.ok) {
-      optimisticToggle(gameId);
+      setRows(snapshot); // cofamy cały stan, nie tylko klikniętą grę
       flash(res.error);
     }
   }

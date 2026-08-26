@@ -77,6 +77,18 @@ export async function toggleWantGame(
   );
 
   if (error) return { ok: false, error: error.message };
+
+  // Jedna gra na raz: wybór nowej kasuje poprzednią chęć tej samej osoby.
+  // Inaczej zbierałaby się kolejka zaproszeń, na którą nikt nie odpowiada.
+  if (!current) {
+    await supabase
+      .from("match_games")
+      .update({ [column]: false, updated_at: new Date().toISOString() })
+      .eq("match_id", matchId)
+      .neq("game_id", gameId)
+      .eq(column, true);
+  }
+
   return { ok: true };
 }
 
