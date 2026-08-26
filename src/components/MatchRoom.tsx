@@ -4,7 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { GAMES, gameById, gameOfTheDay, DAILY_BONUS, type Game } from "@/lib/games";
+import {
+  GAMES,
+  gameById,
+  gameOfTheDay,
+  DAILY_BONUS,
+  INVITE_TTL_H,
+  type Game,
+} from "@/lib/games";
 import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
@@ -28,6 +35,8 @@ type MatchGame = {
   a_wants: boolean;
   b_wants: boolean;
   played: boolean;
+  /** Kiedy ktoś ostatnio kliknął — stąd wiadomo, czy zaproszenie jest świeże. */
+  updated_at?: string | null;
 };
 
 type Message = {
@@ -77,7 +86,14 @@ export function MatchRoom({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [points, setPoints] = useState(initialPoints);
-  const [rows, setRows] = useState<MatchGame[]>(initialGames);
+  /*
+   * Zaproszenia nie kasują się przy wyjściu z rozmowy — w apce, w której obie
+   * osoby rzadko są online naraz, to jedyny most przez czas. Za to STARZEJĄ się:
+   * po dobie przestają udawać aktualne i znikają.
+   */
+  const [rows, setRows] = useState<MatchGame[]>(() =>
+    initialGames.map((r) => (isStale(r) ? { ...r, a_wants: false, b_wants: false } : r)),
+  );
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [active, setActive] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
@@ -148,6 +164,19 @@ export function MatchRoom({
   flashRef.current = flash;
   const otherNameRef = useRef(otherName);
   otherNameRef.current = otherName;
+
+  // Sprzątanie starych zaproszeń — raz, przy wejściu, po cichu.
+  useEffect(() => {
+    const stale = initialGames.filter(isStale);
+    if (!stale.length) return;
+    supabase
+      .from("match_games")
+      .update({ a_wants: false, b_wants: false })
+      .eq("match_id", matchId)
+      .in("game_id", stale.map((r) => r.game_id))
+      .then(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const rowFor = useCallback(
     (id: string) => rows.find((r) => r.game_id === id),
@@ -616,6 +645,13 @@ export function MatchRoom({
       )}
     </div>
   );
+}
+
+/** Zaproszenie starsze niż doba nie jest już zaproszeniem. */
+function isStale(r: MatchGame) {
+  if (!r.updated_at || (!r.a_wants && !r.b_wants)) return false;
+  const ms = Date.now() - new Date(r.updated_at).getTime();
+  return ms > INVITE_TTL_H * 3600 * 1000;
 }
 
 /* -------------------------------- ROZMOWA -------------------------------- */

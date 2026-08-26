@@ -85,3 +85,27 @@ export function nextUnlock(points: number): { game: Game; missing: number } | nu
   )[0];
   return locked ? { game: locked, missing: locked.unlock - points } : null;
 }
+
+
+/**
+ * „Kiedy" po ludzku — używane przy zaproszeniach do gry.
+ * Świeże zaproszenie znaczy „zagrajmy teraz", wczorajsze — „zostawiłem ślad".
+ */
+export function sinceLabel(iso?: string | null): string | null {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return null;
+
+  const min = Math.floor(ms / 60000);
+  if (min < 2) return "przed chwilą";
+  if (min < 60) return `${min} min temu`;
+
+  const godz = Math.floor(min / 60);
+  if (godz < 24) return `${godz} godz. temu`;
+
+  const dni = Math.floor(godz / 24);
+  return dni === 1 ? "wczoraj" : `${dni} dni temu`;
+}
+
+/** Po tylu godzinach zaproszenie przestaje udawać, że jest aktualne. */
+export const INVITE_TTL_H = 24;

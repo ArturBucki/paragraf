@@ -1,6 +1,6 @@
 "use client";
 
-import type { Game } from "@/lib/games";
+import { sinceLabel, type Game } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 
 /** Wspólna skorupa: cicha karta z cienkim paskiem w kolorze gry. */
@@ -34,11 +34,17 @@ export function GameInvite({
   otherName,
   note,
   lead,
+  since,
+  live,
   onAccept,
   onDecline,
 }: {
   game: Game;
   otherName: string;
+  /** Kiedy kliknęła — świeże zaproszenie brzmi inaczej niż wczorajsze. */
+  since?: string | null;
+  /** Czy druga osoba jest teraz w rozmowie. */
+  live?: boolean;
   /** Zamiast czasu i punktów — używane przy losowaniu, gdzie zależą od wyniku. */
   note?: string;
   /** Nadpisuje pierwszą linijkę („Zosia chce zagrać"). */
@@ -58,13 +64,14 @@ export function GameInvite({
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12px] leading-tight text-inksoft">
             <span className="font-semibold text-ink">{otherName}</span>{" "}
-            {lead ?? "chce zagrać"}
+            {lead ?? (live ? "chce zagrać teraz" : "zaprasza do gry")}
           </p>
           <p className="line-clamp-2 text-[15px] font-bold leading-tight">
             {game.name}
           </p>
           <p className="mt-0.5 text-[11px] text-inksoft">
             {note ?? `${game.time} · +${game.pts} pkt`}
+            {sinceLabel(since) ? ` · ${sinceLabel(since)}` : ""}
           </p>
         </div>
       </div>
@@ -93,11 +100,14 @@ export function GameWaiting({
   otherName,
   otherOnline,
   otherInRoom,
+  since,
   onCancel,
 }: {
   game: Game;
   otherName: string;
   otherOnline: boolean;
+  /** Od kiedy czekasz — po dobie zaproszenie i tak wygasa. */
+  since?: string | null;
   /** Czy druga osoba siedzi w tej rozmowie — tylko wtedy gra ruszy od razu. */
   otherInRoom?: boolean;
   onCancel: () => void;
@@ -113,16 +123,21 @@ export function GameWaiting({
         </span>
 
         <div className="min-w-0 flex-1">
+          {/* Bez odmiany imienia — „Czekasz na Ada" brzmiałoby jak automat. */}
           <p className="truncate text-[14px] font-semibold leading-tight">
-            Czekasz na {otherName}
+            Zaproszenie wysłane
           </p>
           <p className="truncate text-[12px] text-inksoft">
-            {game.name} ·{" "}
+            {game.name}
+            {sinceLabel(since) ? ` · ${sinceLabel(since)}` : ""}
+          </p>
+          <p className="truncate text-[11px] text-inksoft">
+            {otherName}{" "}
             {otherInRoom
               ? "jest tu z Tobą"
               : otherOnline
                 ? "jest w apce, zaraz zobaczy"
-                : "offline, zaproszenie poczeka"}
+                : "jest offline — zaproszenie poczeka"}
           </p>
         </div>
 
