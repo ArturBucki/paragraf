@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useMemo } from "react";
 import {
   GAMES,
   DAILY_BONUS,
@@ -10,7 +9,6 @@ import {
   type Game,
 } from "@/lib/games";
 import { Icon } from "@/components/Icon";
-import { GameWheel } from "@/components/GameWheel";
 
 export type MatchGame = {
   game_id: string;
@@ -31,10 +29,10 @@ export function GamePicker({
   otherName,
   today,
   matchId,
-  channel,
   onClose,
   onToggle,
   onStart,
+  onRandom,
 }: {
   points: number;
   isA: boolean;
@@ -42,12 +40,12 @@ export function GamePicker({
   otherName: string;
   today: string;
   matchId: string;
-  channel: RealtimeChannel | null;
   onClose: () => void;
   onToggle: (id: string) => void;
   onStart: (id: string) => void;
+  /** Propozycja losowania — koło rusza dopiero, gdy oboje się zgodzą. */
+  onRandom: () => void;
 }) {
-  const [wheelOpen, setWheelOpen] = useState(false);
 
   const available = useMemo(
     () => GAMES.filter((g) => points >= g.unlock),
@@ -144,14 +142,17 @@ export function GamePicker({
 
           {/* ------------------------------------------------------- KOŁO */}
           <button
-            onClick={() => setWheelOpen(true)}
+            onClick={() => {
+              onRandom();
+              onClose();
+            }}
             className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-line bg-surface px-4 py-3 text-left transition active:scale-[0.99]"
           >
             <Icon name="dice" className="h-6 w-6 flex-none text-coral" />
             <span className="flex-1">
               <span className="block text-sm font-bold">Nie możecie się zdecydować?</span>
               <span className="block text-[11px] text-inksoft">
-                Zakręćcie kołem — wybierze za was
+                Zaproponuj koło — zakręcicie, gdy oboje wejdziecie
               </span>
             </span>
             <span className="rounded-full bg-coral px-3.5 py-1.5 text-xs font-extrabold text-[#06281A]">
@@ -256,29 +257,6 @@ export function GamePicker({
         </div>
       </div>
 
-      {/* ------------------------------------------------- KOŁO NA WIERZCHU */}
-      {wheelOpen && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-bg/95 px-6 backdrop-blur"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <p className="font-display text-2xl font-extrabold">Zakręćcie kołem</p>
-          <GameWheel
-            games={available}
-            channel={channel}
-            onResult={(id) => {
-              setWheelOpen(false);
-              onStart(id);
-            }}
-          />
-          <button
-            onClick={() => setWheelOpen(false)}
-            className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-inksoft"
-          >
-            Wolimy wybrać sami
-          </button>
-        </div>
-      )}
     </div>
   );
 }

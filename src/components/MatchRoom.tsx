@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { GAMES, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
+import { GAMES, gameById, gameOfTheDay, DAILY_BONUS, type Game } from "@/lib/games";
 import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
 import { GamePicker } from "@/components/GamePicker";
 import { GameRail } from "@/components/GameRail";
+import { GameWheel } from "@/components/GameWheel";
 import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
 import { TicTacToe } from "@/components/games/TicTacToe";
@@ -41,6 +42,21 @@ type Message = {
 
 const PLAYABLE = new Set(["riddle", "ttt", "draw", "truths", "q36", "escape"]);
 const RANDOM_ID = "__random__";
+
+/** Losowanie udaje grę, bo przechodzi przez tę samą zgodę obojga. */
+const RANDOM_GAME: Game = {
+  id: RANDOM_ID,
+  icon: "dice",
+  short: "Losuj",
+  name: "Losowanie gry",
+  desc: "Koło wybierze za Was.",
+  tag: "Losowanie",
+  time: "chwila",
+  accent: "#F5C86B",
+  pts: 0,
+  unlock: 0,
+  kind: "coop",
+};
 
 export function MatchRoom({
   matchId,
@@ -135,7 +151,8 @@ export function MatchRoom({
         }
       })
       .on("broadcast", { event: "decline" }, ({ payload }) => {
-        const g = payload?.gameId ? gameById(payload.gameId as string) : null;
+        const id = payload?.gameId as string | undefined;
+        const g = id === RANDOM_ID ? RANDOM_GAME : id ? gameById(id) : null;
         if (g) flashRef.current(`${otherNameRef.current} woli teraz nie grać w „${g.name}".`);
       })
       .subscribe();
@@ -223,20 +240,28 @@ export function MatchRoom({
     channelRef.current?.send({ type: "broadcast", event: "start", payload: { gameId } });
   }
 
-  function drawRandom() {
-    const pool = GAMES.filter(
-      (g) => PLAYABLE.has(g.id) && points >= g.unlock && !rowFor(g.id)?.played,
+  /**
+   * Losowanie też wymaga zgody obojga — inaczej jedna osoba wrzucałaby drugą
+   * do gry, której ta nie widziała na oczy.
+   */
+  function proposeRandom() {
+    onToggle(RANDOM_ID);
+  }
+
+  /** Przyjmuję propozycję losowania — koło otworzy się obojgu. */
+  function acceptRandom() {
+    optimisticToggle(RANDOM_ID);
+    toggleWantGame(matchId, RANDOM_ID).catch(() => {});
+  }
+
+  /** Sprząta zgodę na losowanie (po wyniku albo po rezygnacji). */
+  function clearRandom() {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.game_id === RANDOM_ID ? { ...r, a_wants: false, b_wants: false } : r,
+      ),
     );
-    const source = pool.length
-      ? pool
-      : GAMES.filter((g) => PLAYABLE.has(g.id) && points >= g.unlock);
-    if (!source.length) {
-      flash("Nie ma jeszcze z czego losować.");
-      return;
-    }
-    const pick = source[Math.floor(Math.random() * source.length)];
-    flash(`Wylosowano: ${pick.name}`);
-    startGame(pick.id);
+    declineGame(matchId, RANDOM_ID).catch(() => {});
   }
 
   // Zamykamy grę i pokazujemy punkty OD RAZU — zapis leci w tle.
@@ -288,6 +313,16 @@ export function MatchRoom({
       />
     );
   }
+
+  // Stan losowania trzymamy w tym samym wierszu co gry — pseudo-gra „__random__".
+  const randomRow = rowFor(RANDOM_ID);
+  const randomMine = !!(isA ? randomRow?.a_wants : randomRow?.b_wants);
+  const randomTheirs = !!(isA ? randomRow?.b_wants : randomRow?.a_wants);
+  const randomBoth = randomMine && randomTheirs;
+
+  const wheelGames = GAMES.filter(
+    (g) => PLAYABLE.has(g.id) && points >= g.unlock,
+  );
 
   const stateFor = (id: string) => {
     const r = rowFor(id);
@@ -359,12 +394,12 @@ export function MatchRoom({
             otherName={otherName}
             locked={!playedAny}
             onOpenGames={() => setSheet(true)}
-            onRandom={drawRandom}
+            onRandom={proposeRandom}
           />
 
           {/* kto chce grać — zaproszenie, oczekiwanie albo gotowy start */}
           <div className="flex-none pt-1">
-            {ready ? (
+            {randomBoth ? null : ready ? (
               <GameReady
                 game={ready}
                 otherName={otherName}
@@ -377,12 +412,28 @@ export function MatchRoom({
                 onAccept={() => acceptInvite(invited.id)}
                 onDecline={() => declineInvite(invited.id)}
               />
+            ) : randomTheirs ? (
+              <GameInvite
+                game={RANDOM_GAME}
+                otherName={otherName}
+                lead="proponuje losowanie"
+                note="Koło wybierze grę za Was oboje"
+                onAccept={() => acceptRandom()}
+                onDecline={() => declineInvite(RANDOM_ID)}
+              />
             ) : waiting ? (
               <GameWaiting
                 game={waiting}
                 otherName={otherName}
                 otherOnline={otherOnline}
                 onCancel={() => onToggle(waiting.id)}
+              />
+            ) : randomMine ? (
+              <GameWaiting
+                game={RANDOM_GAME}
+                otherName={otherName}
+                otherOnline={otherOnline}
+                onCancel={() => onToggle(RANDOM_ID)}
               />
             ) : null}
 
@@ -410,7 +461,7 @@ export function MatchRoom({
           stateFor={stateFor}
           onPick={onToggle}
           onOpenAll={() => setSheet(true)}
-          onRandom={drawRandom}
+          onRandom={proposeRandom}
         />
       </div>
 
@@ -422,11 +473,37 @@ export function MatchRoom({
           otherName={otherName}
           today={today}
           matchId={matchId}
-          channel={channelRef.current}
           onClose={() => setSheet(false)}
           onToggle={onToggle}
           onStart={startGame}
+          onRandom={proposeRandom}
         />
+      )}
+
+      {randomBoth && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-bg/95 px-6 backdrop-blur">
+          <div className="text-center">
+            <p className="font-display text-2xl font-extrabold">Zakręćcie kołem</p>
+            <p className="mt-1 text-sm text-inksoft">
+              Wystarczy, że zakręci jedno z Was — u drugiego koło zatrzyma się
+              w tym samym miejscu.
+            </p>
+          </div>
+          <GameWheel
+            games={wheelGames}
+            channel={channelRef.current}
+            onResult={(id) => {
+              clearRandom();
+              startGame(id);
+            }}
+          />
+          <button
+            onClick={clearRandom}
+            className="rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-inksoft"
+          >
+            Wolimy wybrać sami
+          </button>
+        </div>
       )}
 
       {toast && (

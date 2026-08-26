@@ -10,11 +10,17 @@ import { Icon } from "@/components/Icon";
 export function GameInvite({
   game,
   otherName,
+  note,
+  lead,
   onAccept,
   onDecline,
 }: {
   game: Game;
   otherName: string;
+  /** Zamiast czasu i punktów — używane przy losowaniu, gdzie zależą od wyniku. */
+  note?: string;
+  /** Nadpisuje pierwszą linijkę („Zosia chce zagrać"). */
+  lead?: string;
   onAccept: () => void;
   onDecline: () => void;
 }) {
@@ -33,13 +39,14 @@ export function GameInvite({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] leading-tight">
-            <span className="font-bold text-berry">{otherName}</span> chce zagrać
+            <span className="font-bold text-berry">{otherName}</span>{" "}
+            {lead ?? "chce zagrać"}
           </p>
           <p className="line-clamp-2 font-display text-[15px] font-extrabold leading-tight">
             {game.name}
           </p>
           <p className="font-mono text-[10px] text-inksoft">
-            {game.time} · +{game.pts} pkt
+            {note ?? `${game.time} · +${game.pts} pkt`}
           </p>
         </div>
       </div>
