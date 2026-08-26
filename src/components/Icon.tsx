@@ -24,7 +24,8 @@ export type IconName =
   | "work"
   | "cap"
   | "ruler"
-  | "info";
+  | "info"
+  | "verified";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // Talia kart — odkrywanie
@@ -145,6 +146,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="12" cy="12" r="8.6" />
       <path d="M12 11v5.2" />
       <path d="M12 7.9h.01" />
+    </>
+  ),
+  // Weryfikacja — odznaka z ptaszkiem
+  verified: (
+    <>
+      <path d="M12 3.2l2.3 1.7 2.8-.2.9 2.7 2.3 1.6-1 2.7 1 2.7-2.3 1.6-.9 2.7-2.8-.2L12 20.8l-2.3-1.7-2.8.2-.9-2.7-2.3-1.6 1-2.7-1-2.7 2.3-1.6.9-2.7 2.8.2Z" />
+      <path d="M8.8 12.1l2.2 2.2 4.2-4.4" />
     </>
   ),
   // Wzrost — miarka

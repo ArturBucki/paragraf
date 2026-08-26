@@ -4,6 +4,7 @@ import { Icon } from "@/components/Icon";
 import { BottomNav } from "@/components/BottomNav";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChipOne, ChipMany, InterestPicker } from "@/components/ProfilePickers";
 import { Section, Field, Pick } from "@/components/ProfileSection";
 import {
@@ -85,9 +86,12 @@ export default async function Settings({
               {profile?.age ? `, ${profile.age}` : ""}
             </h1>
             <p className="truncate text-xs text-inksoft">{user.email}</p>
-            <p className="mt-1 font-mono text-[11px] text-gold">
-              {matchCount ?? 0} {matchCount === 1 ? "para" : "par"}
-            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <VerifiedBadge verified={profile?.verified ?? false} />
+              <span className="font-mono text-[11px] text-gold">
+                {matchCount ?? 0} {matchCount === 1 ? "para" : "par"}
+              </span>
+            </div>
           </div>
         </header>
 

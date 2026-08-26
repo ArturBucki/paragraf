@@ -29,6 +29,9 @@ export type Profile = {
   zodiac: string | null;
   languages: string[];
 
+  /** Zweryfikowane zdjęcie — na razie ustawiane ręcznie, docelowo selfie. */
+  verified: boolean;
+
   created_at?: string;
 };
 

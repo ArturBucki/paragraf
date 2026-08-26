@@ -3,6 +3,7 @@ import type { Profile } from "@/lib/types";
 import { INTEREST_GROUPS } from "@/lib/types";
 import { Icon, type IconName } from "@/components/Icon";
 import { PhotoViewer } from "@/components/PhotoViewer";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 /** Kolor po grupie — te same barwy co przy wybieraniu w ustawieniach. */
 const ACCENT = new Map<string, string>(
@@ -54,9 +55,7 @@ export function ProfileView({
         >
           <Icon name="back" className="h-5 w-5" />
         </Link>
-        <span className="min-w-0 flex-1 truncate font-display text-lg font-extrabold">
-          {profile.name}
-        </span>
+        <span className="min-w-0 flex-1" />
         {matchHref && (
           <Link
             href={matchHref}
@@ -67,32 +66,36 @@ export function ProfileView({
         )}
       </header>
 
-      <PhotoViewer profile={profile} />
+      <PhotoViewer
+        profile={profile}
+        overlay={
+          <>
+            <h1 className="font-display text-[28px] font-extrabold leading-tight">
+              {profile.name}
+              {profile.age ? `, ${profile.age}` : ""}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <VerifiedBadge verified={profile.verified} onPhoto />
+              {profile.looking_for && (
+                <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#06281A]">
+                  {profile.looking_for}
+                </span>
+              )}
+            </div>
+          </>
+        }
+      />
 
-      <section>
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          <h1 className="font-display text-2xl font-extrabold">
-            {profile.name}
-            {profile.age ? `, ${profile.age}` : ""}
-          </h1>
-          {profile.looking_for && (
-            <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#06281A]">
-              {profile.looking_for}
+      {meta.length > 0 && (
+        <section className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-inksoft">
+          {meta.map((m) => (
+            <span key={m.icon} className="flex items-center gap-1.5">
+              <Icon name={m.icon} className="h-4 w-4 opacity-80" />
+              {m.text}
             </span>
-          )}
-        </div>
-
-        {meta.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-inksoft">
-            {meta.map((m) => (
-              <span key={m.icon} className="flex items-center gap-1.5">
-                <Icon name={m.icon} className="h-4 w-4 opacity-80" />
-                {m.text}
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
+          ))}
+        </section>
+      )}
 
       {profile.bio && (
         <section className="rounded-2xl border border-line bg-surface p-4">

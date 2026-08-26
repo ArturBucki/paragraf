@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { Icon, type IconName } from "@/components/Icon";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { likeProfile, passProfile } from "@/app/actions";
 
 export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
@@ -146,11 +147,12 @@ export function SwipeDeck({ candidates }: { candidates: Profile[] }) {
         )}
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent p-5 pb-16 pt-16 text-white">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <h2 className="font-display text-2xl font-extrabold">
-              {current.name}
-              {current.age ? `, ${current.age}` : ""}
-            </h2>
+          <h2 className="font-display text-2xl font-extrabold">
+            {current.name}
+            {current.age ? `, ${current.age}` : ""}
+          </h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <VerifiedBadge verified={current.verified} onPhoto />
             {current.looking_for && (
               <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11px] font-bold text-[#06281A]">
                 {current.looking_for}
