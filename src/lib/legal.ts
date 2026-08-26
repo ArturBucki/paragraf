@@ -2,13 +2,13 @@
  * Dane operatora w jednym miejscu — regulamin, polityka prywatności i rejestracja
  * czytają je stąd, żeby nie rozjechały się między dokumentami.
  *
- * DO UZUPEŁNIENIA: company, address, nip. Dopóki są puste, dokumenty pokazują
- * imię i adres e-mail (to wystarczy na test wśród znajomych, ale przy szerszym
- * starcie RODO wymaga pełnej tożsamości administratora).
+ * BRAKUJE JESZCZE ADRESU. RODO wymaga, żeby administrator dał się zidentyfikować
+ * i namierzyć; sam NIP i e-mail to minimum, adres domyka sprawę. Wpisz go poniżej,
+ * a przejściowa formułka w obu dokumentach zniknie sama.
  */
-const COMPANY = ""; // np. "paragraf sp. z o.o."
+const COMPANY = 'Artur Bucki, prowadzący działalność pod firmą „artb"';
 const ADDRESS = ""; // np. "ul. Przykładowa 1/2, 00-001 Warszawa"
-const NIP = ""; // np. "1234567890"
+const NIP = "8442387394";
 
 export const LEGAL = {
   company: COMPANY,
@@ -19,11 +19,9 @@ export const LEGAL = {
   date: "1 września 2026",
 
   /** Jedna linijka do wstawienia w tekst — tyle, ile faktycznie wiemy. */
-  operator: [COMPANY || "Artur", ADDRESS, NIP && `NIP ${NIP}`]
-    .filter(Boolean)
-    .join(", "),
+  operator: [COMPANY, ADDRESS, NIP && `NIP ${NIP}`].filter(Boolean).join(", "),
 
-  /** true, gdy komplet danych firmowych jest wpisany. */
+  /** true dopiero, gdy da się nas zidentyfikować i namierzyć. */
   complete: Boolean(COMPANY && ADDRESS && NIP),
 
   disclaimer:

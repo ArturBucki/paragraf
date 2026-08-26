@@ -21,8 +21,8 @@ export default function Prywatnosc() {
         </p>
         {!LEGAL.complete && (
           <p className="mt-2 text-[13px] text-inksoft">
-            Pełne dane rejestrowe administratora pojawią się tutaj przed
-            publicznym startem. Możesz też poprosić o nie e-mailem.
+            Adres siedziby administratora pojawi się tutaj przed publicznym
+            startem — do tego czasu podajemy go na życzenie, e-mailem.
           </p>
         )}
       </Sekcja>

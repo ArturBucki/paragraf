@@ -21,8 +21,9 @@ export default function Regulamin() {
         </p>
         {!LEGAL.complete && (
           <p className="mt-2 text-[13px] text-inksoft">
-            Dane rejestrowe podmiotu uzupełnimy tu przed publicznym startem;
-            do tego czasu usługa działa w wersji testowej dla zaproszonych osób.
+            Adres siedziby uzupełnimy tu przed publicznym startem; do tego
+            czasu usługa działa w wersji testowej dla zaproszonych osób, a adres
+            podajemy na życzenie pod adresem {LEGAL.email}.
           </p>
         )}
       </Sekcja>

@@ -36,7 +36,13 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublic =
-    path === "/" || path.startsWith("/login") || path.startsWith("/auth");
+    path === "/" ||
+    path.startsWith("/login") ||
+    path.startsWith("/auth") ||
+    // Regulamin i polityka muszą być czytelne BEZ konta — inaczej nie da się
+    // ich przeczytać przed rejestracją, a to jest cały sens ich pokazywania.
+    path.startsWith("/regulamin") ||
+    path.startsWith("/prywatnosc");
 
   // Niezalogowany na prywatnej trasie -> na logowanie.
   if (!user && !isPublic) {
