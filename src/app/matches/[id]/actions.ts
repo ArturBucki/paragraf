@@ -163,9 +163,8 @@ export async function finishGame(
     supabase.from("messages").insert({
       match_id: matchId,
       sender: user.id,
-      body: `__system__Zagraliście w „${game.name}" · +${awarded} pkt${
-        isDaily ? " (gra dnia)" : ""
-      }`,
+      // Krótko, żeby zmieściło się w jednej linijce plakietki w rozmowie.
+      body: `__system__„${game.name}" · +${awarded} pkt${isDaily ? " · gra dnia" : ""}`,
     }),
   ]);
 

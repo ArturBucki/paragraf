@@ -30,7 +30,7 @@ export function GameRail({
   onRandom: () => void;
 }) {
   return (
-    <aside className="flex w-16 flex-none flex-col items-center justify-center gap-1.5 overflow-y-auto py-2 pl-1">
+    <aside className="flex w-16 flex-none flex-col items-center gap-1.5 overflow-y-auto py-1 pl-1">
       {GAMES.map((g) => (
         <RailItem
           key={g.id}

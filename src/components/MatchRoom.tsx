@@ -584,12 +584,11 @@ function Stream({
       {messages.map((m, i) => {
         if (m.body.startsWith("__system__")) {
           return (
-            <div key={m.id} className="my-3 flex items-center gap-3 px-2">
-              <span className="h-px flex-1 bg-line" />
-              <span className="text-center text-[11px] text-inksoft">
+            <div key={m.id} className="my-3 flex justify-center px-2">
+              <span className="flex max-w-[88%] items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-center text-[11px] font-semibold text-inksoft">
+                <Icon name="spark" className="h-3 w-3 flex-none text-gold" />
                 {m.body.replace("__system__", "")}
               </span>
-              <span className="h-px flex-1 bg-line" />
             </div>
           );
         }
@@ -608,9 +607,9 @@ function Stream({
               </p>
             )}
             <div
-              className={`max-w-[78%] px-3.5 py-2 text-[15px] leading-snug ${
+              className={`w-fit max-w-[80%] px-3.5 py-2 text-[15px] leading-snug ${
                 mine
-                  ? "ml-auto bg-coral text-[rgb(var(--on-coral))] soft-1"
+                  ? "ml-auto bg-coral/25 text-ink"
                   : "mr-auto bg-surface text-ink soft-1"
               } ${
                 mine
