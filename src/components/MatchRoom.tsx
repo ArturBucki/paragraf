@@ -10,7 +10,7 @@ import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
 import { Icon } from "@/components/Icon";
 import { GamePicker } from "@/components/GamePicker";
-import { GameRail } from "@/components/GameRail";
+import { GameStrip } from "@/components/GameStrip";
 import { GameWheel } from "@/components/GameWheel";
 import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
@@ -385,83 +385,81 @@ export function MatchRoom({
         </span>
       </header>
 
-      {/* rozmowa + pasek gier tuż obok */}
-      <div className="flex min-h-0 flex-1 gap-2">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Stream
-            messages={messages}
-            meId={meId}
+      {/* rozmowa na pełną szerokość, wybór gry tuż nad polem wiadomości */}
+      <Stream
+        messages={messages}
+        meId={meId}
+        otherName={otherName}
+        locked={!playedAny}
+        onOpenGames={() => setSheet(true)}
+        onRandom={proposeRandom}
+      />
+
+      <div className="flex-none pt-1">
+        {/* kto chce grać — zaproszenie, oczekiwanie albo gotowy start */}
+        {randomBoth ? null : ready ? (
+          <GameReady
+            game={ready}
             otherName={otherName}
-            locked={!playedAny}
-            onOpenGames={() => setSheet(true)}
-            onRandom={proposeRandom}
+            onStart={() => startGame(ready.id)}
           />
+        ) : invited ? (
+          <GameInvite
+            game={invited}
+            otherName={otherName}
+            onAccept={() => acceptInvite(invited.id)}
+            onDecline={() => declineInvite(invited.id)}
+          />
+        ) : randomTheirs ? (
+          <GameInvite
+            game={RANDOM_GAME}
+            otherName={otherName}
+            lead="proponuje losowanie"
+            note="Koło wybierze grę za Was oboje"
+            onAccept={() => acceptRandom()}
+            onDecline={() => declineInvite(RANDOM_ID)}
+          />
+        ) : waiting ? (
+          <GameWaiting
+            game={waiting}
+            otherName={otherName}
+            otherOnline={otherOnline}
+            onCancel={() => onToggle(waiting.id)}
+          />
+        ) : randomMine ? (
+          <GameWaiting
+            game={RANDOM_GAME}
+            otherName={otherName}
+            otherOnline={otherOnline}
+            onCancel={() => onToggle(RANDOM_ID)}
+          />
+        ) : null}
 
-          {/* kto chce grać — zaproszenie, oczekiwanie albo gotowy start */}
-          <div className="flex-none pt-1">
-            {randomBoth ? null : ready ? (
-              <GameReady
-                game={ready}
-                otherName={otherName}
-                onStart={() => startGame(ready.id)}
-              />
-            ) : invited ? (
-              <GameInvite
-                game={invited}
-                otherName={otherName}
-                onAccept={() => acceptInvite(invited.id)}
-                onDecline={() => declineInvite(invited.id)}
-              />
-            ) : randomTheirs ? (
-              <GameInvite
-                game={RANDOM_GAME}
-                otherName={otherName}
-                lead="proponuje losowanie"
-                note="Koło wybierze grę za Was oboje"
-                onAccept={() => acceptRandom()}
-                onDecline={() => declineInvite(RANDOM_ID)}
-              />
-            ) : waiting ? (
-              <GameWaiting
-                game={waiting}
-                otherName={otherName}
-                otherOnline={otherOnline}
-                onCancel={() => onToggle(waiting.id)}
-              />
-            ) : randomMine ? (
-              <GameWaiting
-                game={RANDOM_GAME}
-                otherName={otherName}
-                otherOnline={otherOnline}
-                onCancel={() => onToggle(RANDOM_ID)}
-              />
-            ) : null}
-
-            <Composer
-              matchId={matchId}
-              locked={!playedAny}
-              onOpenGames={() => setSheet(true)}
-              onOptimistic={(body) =>
-                setMessages((prev) => [
-                  ...prev,
-                  { id: -Date.now(), sender: meId, body, created_at: "" },
-                ])
-              }
-              onFailed={(body) =>
-                setMessages((prev) =>
-                  prev.filter((m) => !(m.id < 0 && m.body === body)),
-                )
-              }
-            />
-          </div>
-        </div>
-
-        <GameRail
-          dailyId={gameOfTheDay(matchId, today, points).id}
+        <GameStrip
+          matchId={matchId}
+          today={today}
+          points={points}
           stateFor={stateFor}
           onPick={onToggle}
-          onOpenAll={() => setSheet(true)}
           onRandom={proposeRandom}
+          onOpenAll={() => setSheet(true)}
+        />
+
+        <Composer
+          matchId={matchId}
+          locked={!playedAny}
+          onOpenGames={() => setSheet(true)}
+          onOptimistic={(body) =>
+            setMessages((prev) => [
+              ...prev,
+              { id: -Date.now(), sender: meId, body, created_at: "" },
+            ])
+          }
+          onFailed={(body) =>
+            setMessages((prev) =>
+              prev.filter((m) => !(m.id < 0 && m.body === body)),
+            )
+          }
         />
       </div>
 
