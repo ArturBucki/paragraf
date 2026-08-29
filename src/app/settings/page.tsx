@@ -7,6 +7,7 @@ import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DangerZone } from "@/components/DangerZone";
+import { PushSetting } from "@/components/PushSetting";
 import type { Profile } from "@/lib/types";
 import { signOut } from "./actions";
 
@@ -64,6 +65,8 @@ export default async function Settings() {
           </span>
           <Icon name="back" className="h-4 w-4 flex-none rotate-180 text-inksoft" />
         </a>
+
+        <PushSetting userId={user.id} />
 
         <PhotoUploader userId={user.id} initial={profile?.photos ?? []} />
 

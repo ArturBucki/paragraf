@@ -20,6 +20,7 @@ import { GamePicker } from "@/components/GamePicker";
 import { GameStrip } from "@/components/GameStrip";
 import { SafetyMenu } from "@/components/SafetyMenu";
 import { PeerStatus } from "@/components/PeerStatus";
+import { notifyPeer } from "@/lib/push";
 import { GameWheel } from "@/components/GameWheel";
 import { GameInvite, GameWaiting, GameReady } from "@/components/GameInvite";
 import { Riddle } from "@/components/games/Riddle";
@@ -293,7 +294,18 @@ export function MatchRoom({
       }
     }
     const snapshot = rows;
+    const turningOn = !(isA
+      ? rowFor(gameId)?.a_wants
+      : rowFor(gameId)?.b_wants);
+
     optimisticToggle(gameId);
+
+    // Powiadomienie ma sens tylko wtedy, gdy druga osoba NIE patrzy na ekran.
+    if (turningOn && !otherInRoom) {
+      const g = gameId === RANDOM_ID ? RANDOM_GAME : gameById(gameId);
+      notifyPeer(matchId, "invite", g?.name);
+    }
+
     enqueue(
       () =>
         supabase
@@ -313,7 +325,12 @@ export function MatchRoom({
     optimisticToggle(gameId);
     enqueue(() => supabase.rpc("pick_game", { p_match: matchId, p_game: gameId }));
     // Jeśli zapraszający zdążył wyjść, zostaje sama zgoda — wejdzie, gdy wróci.
-    if (otherInRoom) startGame(gameId);
+    if (otherInRoom) {
+      startGame(gameId);
+    } else {
+      const g = gameById(gameId);
+      notifyPeer(matchId, "ready", g?.name);
+    }
   }
 
   /** Odrzucam: kasujemy chęć obojga i mówimy o tym drugiej osobie. */
@@ -581,6 +598,7 @@ export function MatchRoom({
           matchId={matchId}
           meId={meId}
           locked={!playedAny}
+          quiet={!otherInRoom}
           onTyping={sendTyping}
           onOpenGames={() => setSheet(true)}
           onOptimistic={(body) =>
@@ -770,6 +788,7 @@ function Composer({
   matchId,
   meId,
   locked,
+  quiet,
   onOpenGames,
   onTyping,
   onOptimistic,
@@ -778,6 +797,8 @@ function Composer({
   matchId: string;
   meId: string;
   locked: boolean;
+  /** true, gdy druga osoba nie jest w rozmowie — wtedy warto ją powiadomić. */
+  quiet: boolean;
   onOpenGames: () => void;
   onTyping: () => void;
   onOptimistic: (body: string) => void;
@@ -811,7 +832,9 @@ function Composer({
         if (error) {
           onFailed(body);
           setText(body);
+          return;
         }
+        if (quiet) notifyPeer(matchId, "message");
       });
   }
 

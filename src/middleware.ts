@@ -8,6 +8,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Wszystko poza plikami statycznymi i obrazami.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Service worker i manifest MUSZĄ być dostępne bez logowania — inaczej
+    // przeglądarka dostaje przekierowanie na /login zamiast pliku i push nie działa.
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|txt)$).*)",
   ],
 };
