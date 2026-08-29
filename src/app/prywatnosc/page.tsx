@@ -16,15 +16,9 @@ export default function Prywatnosc() {
 
       <Sekcja t="Kto jest administratorem">
         <p>
-          Administratorem Twoich danych jest {LEGAL.operator}. W sprawach danych
-          pisz na {LEGAL.email} — odpowiadamy w ciągu 30 dni.
+          Administratorem Twoich danych jest {LEGAL.administrator}. W sprawach
+          danych pisz na {LEGAL.email} — odpowiadamy w ciągu 30 dni.
         </p>
-        {!LEGAL.complete && (
-          <p className="mt-2 text-[13px] text-inksoft">
-            Adres siedziby administratora pojawi się tutaj przed publicznym
-            startem — do tego czasu podajemy go na życzenie, e-mailem.
-          </p>
-        )}
       </Sekcja>
 
       <Sekcja t="Jakie dane zbieramy">

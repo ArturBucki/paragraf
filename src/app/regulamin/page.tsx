@@ -17,15 +17,13 @@ export default function Regulamin() {
       <Sekcja n="1" t="Kto prowadzi paragraf">
         <p>
           Usługę prowadzi {LEGAL.operator}, kontakt: {LEGAL.email}. Aplikacja
-          działa pod adresem {LEGAL.site}.
+          działa pod adresem {LEGAL.site}. Pełne dane, razem z adresem, znajdziesz
+          w{" "}
+          <Link href="/prywatnosc" className="underline underline-offset-2">
+            Polityce prywatności
+          </Link>
+          .
         </p>
-        {!LEGAL.complete && (
-          <p className="mt-2 text-[13px] text-inksoft">
-            Adres siedziby uzupełnimy tu przed publicznym startem; do tego
-            czasu usługa działa w wersji testowej dla zaproszonych osób, a adres
-            podajemy na życzenie pod adresem {LEGAL.email}.
-          </p>
-        )}
       </Sekcja>
 
       <Sekcja n="2" t="Kto może korzystać">
