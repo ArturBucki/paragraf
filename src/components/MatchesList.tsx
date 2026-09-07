@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
+import { activityOf, dotClass } from "@/lib/activity";
 import { gameById } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 
@@ -22,12 +23,15 @@ export function MatchesList({
   meId,
   matches,
   profiles,
+  showActivity,
 }: {
   meId: string;
   matches: MatchRow[];
   profiles: Record<string, Profile>;
+  /** Moje ustawienie. Wyłączone = nie nadaję i nie odbieram. */
+  showActivity: boolean;
 }) {
-  const online = usePresence(meId);
+  const presence = usePresence(meId, { enabled: showActivity });
 
   if (matches.length === 0) {
     return (
@@ -46,8 +50,14 @@ export function MatchesList({
   const fresh = matches.filter((m) => !m.lastMessage);
   const talking = matches.filter((m) => m.lastMessage);
 
-  const score = (m: MatchRow) =>
-    (online.has(m.otherId) ? 2 : 0) + (m.waitingGame ? 1 : 0);
+  // Kto jest właśnie w NASZEJ rozmowie, ten idzie na samą górę — z nim można
+  // zagrać w tej sekundzie, a to jest cała stawka paragrafu.
+  const score = (m: MatchRow) => {
+    const a = activityOf(profiles[m.otherId], presence, m.id);
+    return (
+      (a.kind === "room" ? 4 : a.kind === "app" ? 2 : 0) + (m.waitingGame ? 1 : 0)
+    );
+  };
   const sortedTalking = [...talking].sort((a, b) => score(b) - score(a));
 
   return (
@@ -60,7 +70,7 @@ export function MatchesList({
           <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
             {fresh.map((m) => {
               const p = profiles[m.otherId];
-              const isOnline = online.has(m.otherId);
+              const act = activityOf(p, presence, m.id);
               return (
                 <Link
                   key={m.id}
@@ -70,7 +80,11 @@ export function MatchesList({
                 >
                   <div
                     className={`relative h-[68px] w-[68px] rounded-full p-[2px] ${
-                      isOnline ? "bg-berry" : "bg-line"
+                      act.kind === "room"
+                        ? "bg-berry"
+                        : act.kind === "app"
+                          ? "bg-gold"
+                          : "bg-line"
                     }`}
                   >
                     <div className="h-full w-full overflow-hidden rounded-full border-2 border-bg">
@@ -100,7 +114,8 @@ export function MatchesList({
           <div className="flex flex-col gap-2">
             {sortedTalking.map((m) => {
               const p = profiles[m.otherId];
-              const isOnline = online.has(m.otherId);
+              const act = activityOf(p, presence, m.id);
+              const dot = dotClass(act.kind);
               const g = m.waitingGame ? gameById(m.waitingGame) : null;
 
               return (
@@ -116,8 +131,10 @@ export function MatchesList({
                     <div className="h-full w-full overflow-hidden rounded-full">
                       <ProfilePhoto profile={p ?? null} />
                     </div>
-                    {isOnline && (
-                      <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-bg bg-berry" />
+                    {dot && (
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-bg ${dot}`}
+                      />
                     )}
                   </div>
 
@@ -130,15 +147,30 @@ export function MatchesList({
                         <Icon name="spark" className="inline h-3 w-3 align-[-1px]" /> {m.points}
                       </span>
                     </div>
-                    {g ? (
-                      <div className="truncate text-xs font-semibold text-berry">
-                        chce zagrać: <Icon name={g.icon} className="inline h-3.5 w-3.5 align-[-2px]" /> {g.name}
-                      </div>
-                    ) : (
-                      <div className="truncate text-xs text-inksoft">
-                        {m.lastMessage}
-                      </div>
-                    )}
+                    <div className="flex items-baseline gap-2">
+                      {g ? (
+                        <span className="truncate text-xs font-semibold text-berry">
+                          chce zagrać: <Icon name={g.icon} className="inline h-3.5 w-3.5 align-[-2px]" /> {g.name}
+                        </span>
+                      ) : (
+                        <span className="truncate text-xs text-inksoft">
+                          {m.lastMessage}
+                        </span>
+                      )}
+                      {act.short && (
+                        <span
+                          className={`ml-auto flex-none text-[11px] ${
+                            act.kind === "room"
+                              ? "font-bold text-berry"
+                              : act.kind === "app"
+                                ? "font-semibold text-coraldeep"
+                                : "text-inksoft"
+                          }`}
+                        >
+                          {act.short}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );

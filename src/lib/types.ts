@@ -32,6 +32,11 @@ export type Profile = {
   /** Zweryfikowane zdjęcie — na razie ustawiane ręcznie, docelowo selfie. */
   verified: boolean;
 
+  /** Kiedy ta osoba ostatnio była w apce (null = nigdy albo ukryte). */
+  last_seen: string | null;
+  /** false = nie pokazuję swojej aktywności i sam też cudzej nie widzę. */
+  show_activity: boolean;
+
   created_at?: string;
 };
 

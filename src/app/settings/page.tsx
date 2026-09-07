@@ -8,6 +8,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DangerZone } from "@/components/DangerZone";
 import { PushSetting } from "@/components/PushSetting";
+import { ActivitySetting } from "@/components/ActivitySetting";
 import type { Profile } from "@/lib/types";
 import { signOut } from "./actions";
 
@@ -67,6 +68,11 @@ export default async function Settings() {
         </a>
 
         <PushSetting userId={user.id} />
+
+        <ActivitySetting
+          userId={user.id}
+          initial={profile?.show_activity !== false}
+        />
 
         <PhotoUploader userId={user.id} initial={profile?.photos ?? []} />
 

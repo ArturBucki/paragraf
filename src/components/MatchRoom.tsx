@@ -15,6 +15,7 @@ import {
 import type { Profile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { usePresence } from "@/lib/usePresence";
+import { activityOf } from "@/lib/activity";
 import { Icon } from "@/components/Icon";
 import { GamePicker } from "@/components/GamePicker";
 import { GameStrip } from "@/components/GameStrip";
@@ -45,6 +46,8 @@ type Message = {
   sender: string;
   body: string;
   created_at: string;
+  /** Kiedy druga osoba to otworzyła (null = jeszcze nie). */
+  read_at?: string | null;
 };
 
 const PLAYABLE = new Set(["riddle", "ttt", "draw", "truths", "q36", "escape"]);
@@ -74,6 +77,7 @@ export function MatchRoom({
   initialGames,
   initialMessages,
   today,
+  showActivity,
 }: {
   matchId: string;
   meId: string;
@@ -84,6 +88,8 @@ export function MatchRoom({
   initialMessages: Message[];
   /** Data z serwera — żeby „gra dnia" była identyczna u obojga. */
   today: string;
+  /** Moje ustawienie aktywności. Wyłączone = nie nadaję i nie widzę cudzej. */
+  showActivity: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [points, setPoints] = useState(initialPoints);
@@ -150,9 +156,12 @@ export function MatchRoom({
 
   const otherName = other?.name ?? "Twój match";
   const playedAny = rows.some((r) => r.played);
-  const online = usePresence(meId);
-  const otherOnline = other ? online.has(other.id) : false;
+  const presence = usePresence(meId, { room: matchId, enabled: showActivity });
   const otherInRoom = other ? inRoom.has(other.id) : false;
+  // Nagłówek mówi pełnym zdaniem; obecność w pokoju jest pewniejsza od globalnej,
+  // bo kanał pary widzi tylko tych dwoje.
+  const activity = activityOf(other, presence, matchId);
+  const otherOnline = activity.kind === "app" || activity.kind === "room";
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -184,6 +193,39 @@ export function MatchRoom({
     [rows],
   );
 
+  /*
+   * „Widziane" ma znaczyć widziane — więc oznaczamy dopiero, gdy karta jest na
+   * wierzchu. Otwarta w tle zakładka to nie jest przeczytana wiadomość.
+   */
+  const unread = messages.some(
+    (m) => m.sender !== meId && !m.read_at && !m.body.startsWith("__system__"),
+  );
+
+  useEffect(() => {
+    if (!unread) return;
+    let done = false;
+
+    const run = () => {
+      if (done || document.visibilityState !== "visible") return;
+      done = true;
+      const at = new Date().toISOString();
+      supabase.rpc("mark_read", { p_match: matchId }).then(
+        () => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.sender !== meId && !m.read_at ? { ...m, read_at: at } : m,
+            ),
+          );
+        },
+        () => {},
+      );
+    };
+
+    run();
+    document.addEventListener("visibilitychange", run);
+    return () => document.removeEventListener("visibilitychange", run);
+  }, [unread, supabase, matchId, meId]);
+
   useEffect(() => {
     const ch = supabase
       .channel(`match:${matchId}`, { config: { presence: { key: meId } } })
@@ -211,6 +253,17 @@ export function MatchRoom({
             );
             return [...withoutTemp, m];
           });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
+        (payload) => {
+          const m = payload.new as Message;
+          if (!m?.id) return;
+          setMessages((prev) =>
+            prev.map((x) => (x.id === m.id ? { ...x, read_at: m.read_at ?? null } : x)),
+          );
         },
       )
       .on(
@@ -517,10 +570,12 @@ export function MatchRoom({
           <div className="text-xs text-inksoft">
             {otherInRoom ? (
               <span className="font-semibold text-berry">jest tu z Tobą</span>
-            ) : otherOnline ? (
-              "jest w apce, ale nie w tej rozmowie"
+            ) : activity.kind === "app" ? (
+              <span className="font-semibold text-coraldeep">{activity.label}</span>
+            ) : activity.kind === "seen" ? (
+              <>{activity.label} — zaproszenie poczeka</>
             ) : (
-              "offline — zaproszenie poczeka"
+              "zaproszenie poczeka"
             )}
           </div>
         </Link>
@@ -736,6 +791,17 @@ function Stream({
     );
   }
 
+  // Tylko jedna plakietka, pod ostatnią przeczytaną — tak jak w Messengerze.
+  // Powtarzanie „widziane" przy każdym dymku robi z rozmowy tablicę wyników.
+  let lastReadMine: number | null = null;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.sender === meId && m.read_at && !m.body.startsWith("__system__")) {
+      lastReadMine = m.id;
+      break;
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col justify-end overflow-y-auto py-3">
       {messages.map((m, i) => {
@@ -776,6 +842,11 @@ function Stream({
             >
               {m.body}
             </div>
+            {m.id === lastReadMine && (
+              <p className="mt-0.5 pr-1 text-right text-[10px] font-semibold text-inksoft">
+                Widziane
+              </p>
+            )}
           </div>
         );
       })}

@@ -30,16 +30,22 @@ export default async function MatchPage({
   const { data: hidden } = await supabase.rpc("hidden_users");
   if (((hidden ?? []) as string[]).includes(otherId)) redirect("/matches");
 
-  const [{ data: other }, { data: games }, { data: messages }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", otherId).maybeSingle(),
-    supabase.from("match_games").select("*").eq("match_id", params.id),
-    supabase
-      .from("messages")
-      .select("*")
-      .eq("match_id", params.id)
-      .order("created_at", { ascending: true })
-      .limit(200),
-  ]);
+  const [{ data: other }, { data: games }, { data: messages }, { data: me }] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", otherId).maybeSingle(),
+      supabase.from("match_games").select("*").eq("match_id", params.id),
+      supabase
+        .from("messages")
+        .select("*")
+        .eq("match_id", params.id)
+        .order("created_at", { ascending: true })
+        .limit(200),
+      supabase
+        .from("profiles")
+        .select("show_activity")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-4">
@@ -52,6 +58,7 @@ export default async function MatchPage({
         initialGames={games ?? []}
         initialMessages={messages ?? []}
         today={new Date().toISOString().slice(0, 10)}
+        showActivity={me?.show_activity !== false}
       />
     </main>
   );

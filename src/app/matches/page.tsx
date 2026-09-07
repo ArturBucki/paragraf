@@ -11,13 +11,14 @@ export default async function MatchesPage() {
   if (!user) redirect("/login");
   const supabase = createClient();
 
-  const [{ data: matches }, { data: hidden }] = await Promise.all([
+  const [{ data: matches }, { data: hidden }, { data: me }] = await Promise.all([
     supabase
       .from("matches")
       .select("*")
       .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
       .order("created_at", { ascending: false }),
     supabase.rpc("hidden_users"),
+    supabase.from("profiles").select("show_activity").eq("id", user.id).maybeSingle(),
   ]);
 
   // Zablokowana para znika z listy — z obu stron, bez śladu.
@@ -80,7 +81,12 @@ export default async function MatchesPage() {
     <>
       <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 pb-24 pt-6">
         <h1 className="font-display text-2xl font-extrabold">Pary</h1>
-        <MatchesList meId={user.id} matches={rows} profiles={profiles} />
+        <MatchesList
+          meId={user.id}
+          matches={rows}
+          profiles={profiles}
+          showActivity={me?.show_activity !== false}
+        />
       </main>
       <BottomNav badge={waitingCount} />
     </>
