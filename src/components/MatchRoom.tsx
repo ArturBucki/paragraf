@@ -194,6 +194,24 @@ export function MatchRoom({
     [rows],
   );
 
+  /**
+   * Wrzuca pytanie do rozmowy jako zwykłą wiadomość.
+   * Dzięki temu pytania i odpowiedzi zostają na stałe — po grze można wrócić
+   * i przeczytać, zamiast oglądać pustą rozmowę po „głębokim" doświadczeniu.
+   */
+  const ask = useCallback(
+    (text: string) => {
+      supabase
+        .from("messages")
+        .insert({ match_id: matchId, sender: meId, body: `__pytanie__${text}` })
+        .then(
+          () => {},
+          () => {},
+        );
+    },
+    [supabase, matchId, meId],
+  );
+
   /*
    * „Widziane" ma znaczyć widziane — więc oznaczamy dopiero, gdy karta jest na
    * wierzchu. Otwarta w tle zakładka to nie jest przeczytana wiadomość.
@@ -501,6 +519,9 @@ export function MatchRoom({
         channel={channelRef.current}
         onExit={() => setActive(null)}
         onFinish={() => onFinish(active)}
+        messages={messages}
+        meId={meId}
+        ask={ask}
         chat={
           /*
            * Czat MUSI być dostępny w trakcie gry. Zagadka prosi „napiszcie do
@@ -835,6 +856,16 @@ function Stream({
   return (
     <div className="flex flex-1 flex-col justify-end overflow-y-auto py-3">
       {messages.map((m, i) => {
+        // Pytanie z gry — zostaje w rozmowie, żeby odpowiedzi pod nim miały sens.
+        if (m.body.startsWith("__pytanie__")) {
+          return (
+            <div key={m.id} className="my-3 px-1">
+              <div className="rounded-2xl border border-line bg-gold/10 px-4 py-3 text-[15px] font-bold leading-snug">
+                {m.body.replace("__pytanie__", "")}
+              </div>
+            </div>
+          );
+        }
         if (m.body.startsWith("__system__")) {
           return (
             <div key={m.id} className="my-3 flex justify-center px-2">
@@ -972,6 +1003,9 @@ function GameScreen(props: {
   onExit: () => void;
   onFinish: () => void;
   chat: React.ReactNode;
+  messages: Message[];
+  meId: string;
+  ask: (text: string) => void;
 }) {
   const g = gameById(props.gameId);
   const shared = {
@@ -980,6 +1014,9 @@ function GameScreen(props: {
     otherName: props.otherName,
     channel: props.channel,
     onFinish: props.onFinish,
+    messages: props.messages,
+    meId: props.meId,
+    ask: props.ask,
   };
 
   return (
@@ -1043,6 +1080,7 @@ function GameChat({
 }) {
   const endRef = useRef<HTMLDivElement>(null);
   const rozmowa = messages.filter((m) => !m.body.startsWith("__system__"));
+  // Pytania z gry ZOSTAJĄ — to wokół nich toczy się rozmowa.
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -1056,18 +1094,27 @@ function GameChat({
             Tu napiszecie do siebie w trakcie gry — {otherName} zobaczy od razu.
           </p>
         ) : (
-          rozmowa.slice(-12).map((m) => (
-            <div
-              key={m.id}
-              className={`mb-1 w-fit max-w-[80%] rounded-2xl px-3 py-1.5 text-[14px] leading-snug ${
-                m.sender === meId
-                  ? "ml-auto bg-coral/25 text-ink"
-                  : "mr-auto bg-surface text-ink soft-1"
-              }`}
-            >
-              {m.body}
-            </div>
-          ))
+          rozmowa.slice(-12).map((m) =>
+            m.body.startsWith("__pytanie__") ? (
+              <div
+                key={m.id}
+                className="mb-1.5 rounded-2xl border border-line bg-gold/10 px-3 py-2 text-[13px] font-bold leading-snug"
+              >
+                {m.body.replace("__pytanie__", "")}
+              </div>
+            ) : (
+              <div
+                key={m.id}
+                className={`mb-1 w-fit max-w-[80%] rounded-2xl px-3 py-1.5 text-[14px] leading-snug ${
+                  m.sender === meId
+                    ? "ml-auto bg-coral/25 text-ink"
+                    : "mr-auto bg-surface text-ink soft-1"
+                }`}
+              >
+                {m.body}
+              </div>
+            ),
+          )
         )}
         {typing && (
           <p className="px-1 text-[11px] font-semibold text-berry">

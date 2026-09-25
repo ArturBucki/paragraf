@@ -7,6 +7,17 @@ export type GameProps = {
   otherName: string;
   channel: RealtimeChannel | null;
   onFinish: () => void;
+
+  /*
+   * Poniższe są dla gier, w których odpowiada się ZWYKŁYM czatem, a nie
+   * osobnym polem w grze. Dzięki temu odpowiedzi zostają w rozmowie na stałe,
+   * zamiast znikać razem z ekranem gry.
+   */
+  /** Wiadomości pary — stąd gra wie, kto już odpowiedział. */
+  messages?: { id: number; sender: string; body: string }[];
+  meId?: string;
+  /** Wrzuca pytanie do rozmowy jako trwałą wiadomość. */
+  ask?: (text: string) => void;
 };
 
 /** Wspólny ekran wygranej — ten sam rytm zakończenia w każdej grze. */

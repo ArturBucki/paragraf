@@ -52,9 +52,12 @@ export default async function MatchesPage() {
   const lastByMatch: Record<string, string> = {};
   for (const m of (msgs ?? []) as any[]) {
     if (lastByMatch[m.match_id]) continue;
-    lastByMatch[m.match_id] = String(m.body).startsWith("__system__")
-      ? String(m.body).replace("__system__", "")
-      : String(m.body);
+    const body = String(m.body);
+    lastByMatch[m.match_id] = body.startsWith("__system__")
+      ? body.replace("__system__", "")
+      : body.startsWith("__pytanie__")
+        ? `Pytanie: ${body.replace("__pytanie__", "")}`
+        : body;
   }
 
   const rows: MatchRow[] = list.map((m) => {

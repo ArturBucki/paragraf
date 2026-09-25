@@ -3,21 +3,28 @@
  * o rosnącej głębi. To jest sedno badania: stopniowe, WZAJEMNE odsłanianie się.
  */
 export const Q36: { round: 1 | 2 | 3; q: string }[] = [
-  { round: 1, q: "Gdybyś mógł zaprosić na kolację dowolną osobę na świecie — kto by to był?" },
+  { round: 1, q: "Kogo z całego świata chcesz zaprosić na kolację?" },
   { round: 1, q: "Co dla Ciebie znaczy „idealny dzień”?" },
-  { round: 1, q: "Kiedy ostatnio śpiewałeś sam do siebie? A komuś innemu?" },
-  { round: 1, q: "Za co w życiu jesteś najbardziej wdzięczny?" },
+  { round: 1, q: "Kiedy ostatnio zdarzyło Ci się śpiewać samemu sobie?" },
+  { round: 1, q: "Za co w życiu czujesz największą wdzięczność?" },
+  { round: 1, q: "Co robisz, kiedy nikt nie patrzy, i trochę Cię to bawi?" },
 
-  { round: 2, q: "Gdybyś mógł obudzić się jutro z jedną nową cechą lub zdolnością — co by to było?" },
+  { round: 2, q: "Jaką jedną cechę albo zdolność chcesz mieć jutro rano?" },
   { round: 2, q: "Co jest Twoim największym osiągnięciem?" },
   { round: 2, q: "Co cenisz najbardziej w przyjaźni?" },
   { round: 2, q: "Jakie masz najcieplejsze wspomnienie?" },
+  { round: 2, q: "Czego się w sobie uczysz od dłuższego czasu?" },
 
-  { round: 3, q: "Kiedy ostatnio płakałeś przy kimś? A sam?" },
-  { round: 3, q: "Czego nie powiedziałbyś komuś, kogo dopiero poznałeś — a jednak chcesz powiedzieć?" },
-  { round: 3, q: "Gdybyś miał umrzeć dziś wieczorem, czego żałowałbyś, że nie powiedziałeś?" },
-  { round: 3, q: "Co już zdążyłeś polubić w drugiej osobie?" },
+  { round: 3, q: "Kiedy ostatnio zdarzyło Ci się płakać przy kimś?" },
+  { round: 3, q: "Czego zwykle nie mówisz komuś poznanemu wczoraj — a tu masz ochotę?" },
+  { round: 3, q: "O czym myślisz, kiedy nie możesz zasnąć?" },
+  { round: 3, q: "Co już udało Ci się polubić w drugiej osobie?" },
 ];
+
+/*
+ * Wszystkie pytania są bez rodzaju gramatycznego. Wcześniej było „gdybyś mógł",
+ * „śpiewałeś", „wdzięczny" — czyli apka randkowa zakładała, że pyta mężczyznę.
+ */
 
 export const ROUND_LABEL: Record<1 | 2 | 3, string> = {
   1: "Runda 1 · lekko",
