@@ -36,11 +36,14 @@ export function GameInvite({
   lead,
   since,
   live,
+  pts,
   onAccept,
   onDecline,
 }: {
   game: Game;
   otherName: string;
+  /** Punkty z bonusem za grę dnia — liczone przez pointsFor(). */
+  pts?: number;
   /** Kiedy kliknęła — świeże zaproszenie brzmi inaczej niż wczorajsze. */
   since?: string | null;
   /** Czy druga osoba jest teraz w rozmowie. */
@@ -70,7 +73,7 @@ export function GameInvite({
             {game.name}
           </p>
           <p className="mt-0.5 text-[11px] text-inksoft">
-            {note ?? `${game.time} · +${game.pts} pkt`}
+            {note ?? `${game.time} · +${pts ?? game.pts} pkt`}
             {sinceLabel(since) ? ` · ${sinceLabel(since)}` : ""}
           </p>
         </div>

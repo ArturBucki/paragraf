@@ -107,5 +107,19 @@ export function sinceLabel(iso?: string | null): string | null {
   return dni === 1 ? "wczoraj" : `${dni} dni temu`;
 }
 
+/**
+ * Ile punktów FAKTYCZNIE dostaną za tę grę — z bonusem za grę dnia.
+ * Kafelek liczył bonus, karta zaproszenia nie, więc zapraszało się kogoś
+ * obietnicą mniejszą niż wypłata. Teraz obie strony pytają o to samo.
+ */
+export function pointsFor(
+  game: Game,
+  matchId: string,
+  today: string,
+  points: number,
+): number {
+  return game.pts + (gameOfTheDay(matchId, today, points).id === game.id ? DAILY_BONUS : 0);
+}
+
 /** Po tylu godzinach zaproszenie przestaje udawać, że jest aktualne. */
 export const INVITE_TTL_H = 24;

@@ -10,6 +10,7 @@ import {
   gameOfTheDay,
   DAILY_BONUS,
   INVITE_TTL_H,
+  pointsFor,
   type Game,
 } from "@/lib/games";
 import type { Profile } from "@/lib/types";
@@ -500,6 +501,34 @@ export function MatchRoom({
         channel={channelRef.current}
         onExit={() => setActive(null)}
         onFinish={() => onFinish(active)}
+        chat={
+          /*
+           * Czat MUSI być dostępny w trakcie gry. Zagadka prosi „napiszcie do
+           * siebie", a rozmowa była zablokowana do pierwszej rozegranej gry —
+           * czyli dokładnie wtedy, gdy była najbardziej potrzebna. Tu jest
+           * otwarty zawsze, niezależnie od tego, czy para grała już wcześniej.
+           */
+          <GameChat
+            matchId={matchId}
+            meId={meId}
+            messages={messages}
+            otherName={otherName}
+            quiet={!otherInRoom}
+            typing={otherTyping}
+            onTyping={sendTyping}
+            onOptimistic={(body) =>
+              setMessages((prev) => [
+                ...prev,
+                { id: -Date.now(), sender: meId, body, created_at: "" },
+              ])
+            }
+            onFailed={(body) =>
+              setMessages((prev) =>
+                prev.filter((m) => !(m.id < 0 && m.body === body)),
+              )
+            }
+          />
+        }
       />
     );
   }
@@ -609,6 +638,7 @@ export function MatchRoom({
           <GameInvite
             game={invited}
             otherName={otherName}
+            pts={pointsFor(invited, matchId, today, points)}
             onAccept={() => acceptInvite(invited.id)}
             onDecline={() => declineInvite(invited.id)}
           />
@@ -941,6 +971,7 @@ function GameScreen(props: {
   channel: RealtimeChannel | null;
   onExit: () => void;
   onFinish: () => void;
+  chat: React.ReactNode;
 }) {
   const g = gameById(props.gameId);
   const shared = {
@@ -970,12 +1001,92 @@ function GameScreen(props: {
         </div>
       </header>
 
-      {props.gameId === "riddle" && <Riddle {...shared} />}
-      {props.gameId === "ttt" && <TicTacToe {...shared} />}
-      {props.gameId === "draw" && <Charades {...shared} />}
-      {props.gameId === "truths" && <Truths {...shared} />}
-      {props.gameId === "q36" && <Questions36 {...shared} />}
-      {props.gameId === "escape" && <EscapeRoom {...shared} />}
+      <div className="flex min-h-0 flex-1 flex-col">
+        {props.gameId === "riddle" && <Riddle {...shared} />}
+        {props.gameId === "ttt" && <TicTacToe {...shared} />}
+        {props.gameId === "draw" && <Charades {...shared} />}
+        {props.gameId === "truths" && <Truths {...shared} />}
+        {props.gameId === "q36" && <Questions36 {...shared} />}
+        {props.gameId === "escape" && <EscapeRoom {...shared} />}
+      </div>
+
+      {props.chat}
+    </div>
+  );
+}
+
+/**
+ * Czat w trakcie gry — wąski pasek nad polem wiadomości.
+ * Celowo niski: gra zostaje główną rzeczą na ekranie, rozmowa jest narzędziem
+ * do jej rozwiązania, a nie osobnym widokiem.
+ */
+function GameChat({
+  matchId,
+  meId,
+  messages,
+  otherName,
+  quiet,
+  typing,
+  onTyping,
+  onOptimistic,
+  onFailed,
+}: {
+  matchId: string;
+  meId: string;
+  messages: Message[];
+  otherName: string;
+  quiet: boolean;
+  typing: boolean;
+  onTyping: () => void;
+  onOptimistic: (body: string) => void;
+  onFailed: (body: string) => void;
+}) {
+  const endRef = useRef<HTMLDivElement>(null);
+  const rozmowa = messages.filter((m) => !m.body.startsWith("__system__"));
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [rozmowa.length]);
+
+  return (
+    <div className="flex-none border-t border-line/70 pt-2">
+      <div className="max-h-[22vh] overflow-y-auto">
+        {rozmowa.length === 0 ? (
+          <p className="px-1 pb-2 text-[12px] text-inksoft">
+            Tu napiszecie do siebie w trakcie gry — {otherName} zobaczy od razu.
+          </p>
+        ) : (
+          rozmowa.slice(-12).map((m) => (
+            <div
+              key={m.id}
+              className={`mb-1 w-fit max-w-[80%] rounded-2xl px-3 py-1.5 text-[14px] leading-snug ${
+                m.sender === meId
+                  ? "ml-auto bg-coral/25 text-ink"
+                  : "mr-auto bg-surface text-ink soft-1"
+              }`}
+            >
+              {m.body}
+            </div>
+          ))
+        )}
+        {typing && (
+          <p className="px-1 text-[11px] font-semibold text-berry">
+            {otherName} pisze…
+          </p>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      <Composer
+        matchId={matchId}
+        meId={meId}
+        locked={false}
+        quiet={quiet}
+        onTyping={onTyping}
+        onOpenGames={() => {}}
+        onOptimistic={onOptimistic}
+        onFailed={onFailed}
+      />
     </div>
   );
 }
