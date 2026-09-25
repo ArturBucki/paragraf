@@ -119,7 +119,9 @@ export function Riddle({ isA, otherName, channel, onFinish, matchId }: GameProps
         ) : theirs ? (
           <>{otherName} ma już swoją odpowiedź{mine ? "" : " — teraz Ty"}.</>
         ) : mine ? (
-          <>Masz swoją odpowiedź. Czekasz na {otherName}.</>
+          // Bez „czekasz na {imię}" — polska odmiana zrobiłaby z tego
+          // „czekasz na Artur". Imię zostaje w mianowniku.
+          <>Masz swoją odpowiedź. Teraz {otherName}.</>
         ) : (
           <>Liczą się odpowiedzi obojga — gra policzy je razem.</>
         )}
