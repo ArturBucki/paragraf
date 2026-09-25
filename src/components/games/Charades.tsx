@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { GameProps } from "./types";
 import { Won, pickFor } from "./types";
 import { Icon } from "@/components/Icon";
@@ -26,16 +26,38 @@ const norm = (s: string) =>
     .replace(/[żź]/g, "z")
     .replace(/\s+/g, " ");
 
-export function Charades({ matchId, isA, otherName, channel, onFinish }: GameProps) {
+/**
+ * Kalambury.
+ *
+ * Zgaduje się ZWYKŁYM czatem pod spodem — gra nie ma własnego pola „Co to
+ * jest?". Wcześniej na jednym ekranie były dwa miejsca do pisania, a strzały
+ * lądowały w ulotnych plakietkach zamiast w rozmowie. Teraz rysujący widzi
+ * próby tam, gdzie i tak patrzy, a po grze zostaje po nich ślad.
+ */
+export function Charades({
+  matchId,
+  isA,
+  otherName,
+  channel,
+  onFinish,
+  messages = [],
+  meId = "",
+}: GameProps) {
   const word = useMemo(() => pickFor(WORDS, matchId), [matchId]);
   const iDraw = isA;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const last = useRef<{ x: number; y: number } | null>(null);
-  const [guess, setGuess] = useState("");
-  const [attempts, setAttempts] = useState<string[]>([]);
-  const [solved, setSolved] = useState(false);
+  // Rozgrywka zaczyna się tu — wcześniejsze wiadomości nie są strzałami.
+  const startRef = useRef(messages.length);
+  const strzaly = messages
+    .slice(startRef.current)
+    .filter((m) => !m.body.startsWith("__"))
+    .filter((m) => (iDraw ? m.sender !== meId : m.sender === meId));
+
+  // Oboje liczą to samo z tych samych wiadomości — nie ma czego synchronizować.
+  const solved = strzaly.some((m) => norm(m.body) === norm(word));
 
   const stroke = useCallback(
     (from: { x: number; y: number }, to: { x: number; y: number }) => {
@@ -69,27 +91,12 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
         const cv = canvasRef.current;
         cv?.getContext("2d")?.clearRect(0, 0, cv.width, cv.height);
       }
-      if (payload?.guess) setAttempts((p) => [...p.slice(-4), payload.guess]);
-      if (payload?.solved) setSolved(true);
     });
   }, [channel, stroke]);
 
   function pos(e: React.PointerEvent) {
     const r = canvasRef.current!.getBoundingClientRect();
     return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
-  }
-
-  function submitGuess(e: React.FormEvent) {
-    e.preventDefault();
-    const g = guess.trim();
-    if (!g) return;
-    setGuess("");
-    setAttempts((p) => [...p.slice(-4), g]);
-    channel?.send({ type: "broadcast", event: "chr", payload: { guess: g } });
-    if (norm(g) === norm(word)) {
-      setSolved(true);
-      channel?.send({ type: "broadcast", event: "chr", payload: { solved: true } });
-    }
   }
 
   if (solved) {
@@ -99,8 +106,8 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           title={`To było „${word}”!`}
           sub={
             iDraw
-              ? `${otherName} zgadła. Nieźle rysujesz.`
-              : "Zgadłeś — dobra robota, dwoje na jednej fali."
+              ? "Twój rysunek wystarczył."
+              : "Trafione — dwoje na jednej fali."
           }
           onFinish={onFinish}
         />
@@ -115,7 +122,9 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           <Icon name="brush" className="h-5 w-5 flex-none text-gold" />
           <div className="text-sm">
             Rysujesz: <b className="text-base">{word}</b>
-            <div className="text-xs text-inksoft">Bez liter i cyfr — tylko rysunek.</div>
+            <div className="text-xs text-inksoft">
+              Bez liter i cyfr. Strzały {otherName} zobaczysz w rozmowie pod spodem.
+            </div>
           </div>
         </div>
       ) : (
@@ -124,7 +133,7 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
           <div className="text-sm">
             {otherName} rysuje — <b>zgadnij, co to jest</b>.
             <div className="text-xs text-inksoft">
-              Rysunek pojawia się na żywo. Strzelaj śmiało.
+              Rysunek pojawia się na żywo. Strzelaj w rozmowie pod spodem.
             </div>
           </div>
         </div>
@@ -161,20 +170,7 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
         }`}
       />
 
-      {attempts.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {attempts.map((a, i) => (
-            <span
-              key={i}
-              className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-inksoft"
-            >
-              {a}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {iDraw ? (
+      {iDraw && (
         <button
           onClick={() => {
             const cv = canvasRef.current;
@@ -185,21 +181,6 @@ export function Charades({ matchId, isA, otherName, channel, onFinish }: GamePro
         >
           Wyczyść i rysuj od nowa
         </button>
-      ) : (
-        <form onSubmit={submitGuess} className="flex gap-2">
-          <input
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            placeholder="Co to jest?"
-            className="flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-coral px-5 py-2.5 text-sm font-bold text-[rgb(var(--on-coral))]"
-          >
-            Zgaduj
-          </button>
-        </form>
       )}
     </div>
   );
