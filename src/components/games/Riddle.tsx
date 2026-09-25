@@ -14,8 +14,8 @@ import { riddleForMatch, answerOf } from "@/lib/riddles";
  *     za dwie osoby: druga mogła w ogóle nie dotknąć ekranu i i tak dostawała
  *     punkty „za współpracę".
  */
-export function Riddle({ isA, otherName, channel, onFinish, matchId }: GameProps) {
-  const riddle = useMemo(() => riddleForMatch(matchId), [matchId]);
+export function Riddle({ isA, otherName, channel, onFinish, matchId, seed = 0 }: GameProps) {
+  const riddle = useMemo(() => riddleForMatch(matchId, seed), [matchId, seed]);
   const answer = useMemo(() => answerOf(riddle), [riddle]);
   const myClue = isA ? riddle.clueA : riddle.clueB;
 

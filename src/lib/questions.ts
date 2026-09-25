@@ -34,11 +34,18 @@ export const ROUND_LABEL: Record<1 | 2 | 3, string> = {
 
 /** Trzy zdania o sobie — dwa prawdziwe, jedno zmyślone. */
 export const TRUTH_SETS: string[][] = [
-  ["Spałem kiedyś całą noc na lotnisku w Oslo.", "Umiem żonglować czterema piłkami.", "Mam kota, który wabi się Pierogi."],
-  ["Przepłynąłem kiedyś jezioro w listopadzie.", "Byłem statystą w reklamie telewizyjnej.", "Nie piłem kawy przez cały rok."],
-  ["Znam na pamięć cały tekst „Misia”.", "Złamałem rękę, tańcząc na weselu.", "Byłem raz na koncercie zespołu, którego nie znałem."],
-  ["Uczyłem się gry na akordeonie.", "Zgubiłem kiedyś paszport w dniu wylotu.", "Ugotowałem obiad dla dwunastu osób."],
+  ["Spanie przez całą noc na lotnisku w Oslo — zdarzyło się.", "Żonglowanie czterema piłkami — umiem.", "Kot w domu wabi się Pierogi."],
+  ["Przepłynięcie jeziora w listopadzie — było.", "Statystowanie w reklamie telewizyjnej — zdarzyło się.", "Cały rok bez kawy — dałem/am radę."],
+  ["Cały tekst „Misia” — znam na pamięć.", "Złamana ręka na weselu, w tańcu — prawda.", "Koncert zespołu, którego wcześniej nie znałam/em — byłam/em."],
+  ["Nauka gry na akordeonie — parę lat.", "Zgubiony paszport w dniu wylotu — zdarzyło się.", "Obiad dla dwunastu osób — ugotowany."],
+  ["Nocleg pod namiotem w środku miasta — było.", "Trzy języki obce w mowie — daję radę.", "Spotkanie z niedźwiedziem na szlaku — zdarzyło się."],
 ];
+
+/*
+ * Zdania są napisane tak, żeby nie zdradzały płci — wcześniej całe były
+ * w rodzaju męskim („Spałem", „Przepłynąłem", „Byłem"), więc zestaw o kobiecie
+ * brzmiał jak cudza wypowiedź.
+ */
 
 // Ten sam zestaw u obojga — bez losowania po stronie klienta.
 export function truthSetFor(matchId: string, salt = 0): string[] {

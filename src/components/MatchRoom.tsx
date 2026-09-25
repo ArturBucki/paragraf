@@ -104,6 +104,8 @@ export function MatchRoom({
   );
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [active, setActive] = useState<string | null>(null);
+  /** Ziarno rozgrywki — ustala je startujący, żeby oboje mieli to samo. */
+  const [seed, setSeed] = useState(0);
   const [sheet, setSheet] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   /*
@@ -296,6 +298,7 @@ export function MatchRoom({
       .on("broadcast", { event: "start" }, ({ payload }) => {
         if (payload?.gameId) {
           setSheet(false);
+          setSeed(typeof payload.seed === "number" ? payload.seed : 0);
           setActive(payload.gameId as string);
         }
       })
@@ -425,9 +428,17 @@ export function MatchRoom({
       flash(`${otherName} nie jest teraz w rozmowie — gra poczeka.`);
       return;
     }
+    // Nowe ziarno przy każdym starcie — inaczej ta sama para dostawałaby
+    // w kółko tę samą zagadkę i to samo hasło do kalamburów.
+    const ziarno = Math.floor(Math.random() * 100000);
     setSheet(false);
+    setSeed(ziarno);
     setActive(gameId);
-    channelRef.current?.send({ type: "broadcast", event: "start", payload: { gameId } });
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "start",
+      payload: { gameId, seed: ziarno },
+    });
   }
 
   /**
@@ -522,6 +533,7 @@ export function MatchRoom({
         messages={messages}
         meId={meId}
         ask={ask}
+        seed={seed}
         chat={
           /*
            * Czat MUSI być dostępny w trakcie gry. Zagadka prosi „napiszcie do
@@ -1006,6 +1018,7 @@ function GameScreen(props: {
   messages: Message[];
   meId: string;
   ask: (text: string) => void;
+  seed: number;
 }) {
   const g = gameById(props.gameId);
   const shared = {
@@ -1017,6 +1030,7 @@ function GameScreen(props: {
     messages: props.messages,
     meId: props.meId,
     ask: props.ask,
+    seed: props.seed,
   };
 
   return (

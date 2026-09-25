@@ -52,7 +52,7 @@ export function TicTacToe({ isA, otherName, channel, onFinish }: GameProps) {
       <p className="text-sm font-semibold text-inksoft">
         {over
           ? winner === mySym
-            ? "Wygrałeś!"
+            ? "Wygrana po Twojej stronie!"
             : winner
               ? `${otherName} wygrywa`
               : "Remis"

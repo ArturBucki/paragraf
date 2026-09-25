@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameProps } from "./types";
 import { Won } from "./types";
 import { LOCKS } from "@/lib/questions";
@@ -13,7 +13,11 @@ import { Icon } from "@/components/Icon";
  */
 export function EscapeRoom({ isA, otherName, channel, onFinish }: GameProps) {
   const [step, setStep] = useState(0);
-  const [wrong, setWrong] = useState<string | null>(null);
+  const [mine, setMine] = useState<string | null>(null);
+  const [theirs, setTheirs] = useState<string | null>(null);
+  const [miss, setMiss] = useState(false);
+  const mineRef = useRef<string | null>(null);
+  mineRef.current = mine;
   const done = step >= LOCKS.length;
   const lock = LOCKS[Math.min(step, LOCKS.length - 1)];
   const myClue = isA ? lock.clueA : lock.clueB;
@@ -21,19 +25,48 @@ export function EscapeRoom({ isA, otherName, channel, onFinish }: GameProps) {
   useEffect(() => {
     if (!channel) return;
     channel.on("broadcast", { event: "escape" }, ({ payload }) => {
-      if (typeof payload?.step === "number") setStep(payload.step);
+      if (!payload || payload.isA === isA) return;
+      setTheirs(payload.answer ?? null);
+      if (mineRef.current && !payload.echo) {
+        channel.send({
+          type: "broadcast",
+          event: "escape",
+          payload: { isA, answer: mineRef.current, echo: true },
+        });
+      }
     });
-  }, [channel]);
+  }, [channel, isA]);
+
+  // Zamek otwiera się dopiero, gdy OBOJE wskażą to samo i poprawnie.
+  // Wcześniej wystarczyło jedno trafne kliknięcie — druga osoba mogła w ogóle
+  // nie dotknąć ekranu, a i tak „uciekaliście razem".
+  useEffect(() => {
+    if (!mine || !theirs) return;
+    if (mine === lock.answer && theirs === lock.answer) {
+      const t = setTimeout(() => {
+        setStep((s) => s + 1);
+        setMine(null);
+        setTheirs(null);
+      }, 700);
+      return () => clearTimeout(t);
+    }
+    setMiss(true);
+    const t = setTimeout(() => {
+      setMine(null);
+      setTheirs(null);
+      setMiss(false);
+    }, 2600);
+    return () => clearTimeout(t);
+  }, [mine, theirs, lock.answer]);
 
   function pick(opt: string) {
-    if (opt !== lock.answer) {
-      setWrong(opt);
-      setTimeout(() => setWrong(null), 900);
-      return;
-    }
-    const next = step + 1;
-    setStep(next);
-    channel?.send({ type: "broadcast", event: "escape", payload: { step: next } });
+    if (mine || miss) return;
+    setMine(opt);
+    channel?.send({
+      type: "broadcast",
+      event: "escape",
+      payload: { isA, answer: opt },
+    });
   }
 
   if (done) {
@@ -74,16 +107,40 @@ export function EscapeRoom({ isA, otherName, channel, onFinish }: GameProps) {
       </div>
 
       <p className="text-sm text-inksoft">
-        {otherName} ma <b>drugą połowę</b>. Napiszcie do siebie i otwórzcie zamek.
+        {otherName} ma <b>drugą połowę</b>. Napiszcie do siebie w rozmowie pod
+        spodem — zamek puści dopiero, gdy oboje wskażecie to samo.
       </p>
+
+      <div
+        className={`rounded-xl px-3 py-2 text-[13px] font-semibold ${
+          miss
+            ? "bg-coral/15 text-coraldeep"
+            : theirs
+              ? "bg-berry/12 text-berry"
+              : "bg-surface2 text-inksoft"
+        }`}
+      >
+        {miss ? (
+          <>Zamek ani drgnął — wskazaliście różne rzeczy. Pogadajcie jeszcze.</>
+        ) : theirs ? (
+          <>{otherName} ma już swój wybór{mine ? "" : " — teraz Ty"}.</>
+        ) : mine ? (
+          <>Twój wybór poszedł. Teraz {otherName}.</>
+        ) : (
+          <>Zamek otwieracie oboje naraz.</>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-2">
         {lock.options.map((o) => (
           <button
             key={o}
             onClick={() => pick(o)}
-            className={`rounded-2xl border border-line bg-surface p-4 font-semibold transition active:scale-95 ${
-              wrong === o ? "opacity-40" : ""
+            disabled={!!mine || miss}
+            className={`rounded-2xl border-2 p-4 font-semibold transition active:scale-95 disabled:cursor-default ${
+              mine === o
+                ? "border-coral bg-coral/12"
+                : "border-line bg-surface disabled:opacity-45"
             }`}
           >
             {o}

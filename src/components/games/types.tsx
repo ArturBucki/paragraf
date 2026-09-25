@@ -18,6 +18,11 @@ export type GameProps = {
   meId?: string;
   /** Wrzuca pytanie do rozmowy jako trwałą wiadomość. */
   ask?: (text: string) => void;
+  /**
+   * Ziarno tej konkretnej rozgrywki — takie samo u obojga, inne za każdym
+   * razem. Bez niego para dostawała w kółko tę samą zagadkę i to samo hasło.
+   */
+  seed?: number;
 };
 
 /** Wspólny ekran wygranej — ten sam rytm zakończenia w każdej grze. */

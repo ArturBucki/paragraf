@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GameProps } from "./types";
 import { Won, pickFor } from "./types";
 import { Icon } from "@/components/Icon";
@@ -42,9 +42,21 @@ export function Charades({
   onFinish,
   messages = [],
   meId = "",
+  seed = 0,
 }: GameProps) {
-  const word = useMemo(() => pickFor(WORDS, matchId), [matchId]);
   const iDraw = isA;
+
+  /*
+   * Hasło wybiera i zna WYŁĄCZNIE rysujący. Wcześniej obie strony liczyły je
+   * z matchId, więc zgadujący miał je w swojej przeglądarce — wystarczyło
+   * zajrzeć w narzędzia deweloperskie. Teraz zgadujący nie ma skąd go wziąć,
+   * a o trafieniu decyduje strona rysująca.
+   */
+  const word = useMemo(
+    () => (iDraw ? pickFor(WORDS, matchId, seed) : ""),
+    [iDraw, matchId, seed],
+  );
+  const [ujawnione, setUjawnione] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
@@ -56,8 +68,21 @@ export function Charades({
     .filter((m) => !m.body.startsWith("__"))
     .filter((m) => (iDraw ? m.sender !== meId : m.sender === meId));
 
-  // Oboje liczą to samo z tych samych wiadomości — nie ma czego synchronizować.
-  const solved = strzaly.some((m) => norm(m.body) === norm(word));
+  // Trafienie ocenia rysujący (tylko on zna hasło) i ogłasza je drugiej stronie.
+  const trafioneUMnie =
+    iDraw && strzaly.some((m) => norm(m.body) === norm(word));
+  const solved = Boolean(ujawnione) || trafioneUMnie;
+  const haslo = iDraw ? word : (ujawnione ?? "");
+
+  useEffect(() => {
+    if (!trafioneUMnie || ujawnione) return;
+    setUjawnione(word);
+    channel?.send({
+      type: "broadcast",
+      event: "chr",
+      payload: { solved: true, word },
+    });
+  }, [trafioneUMnie, ujawnione, word, channel]);
 
   const stroke = useCallback(
     (from: { x: number; y: number }, to: { x: number; y: number }) => {
@@ -91,6 +116,9 @@ export function Charades({
         const cv = canvasRef.current;
         cv?.getContext("2d")?.clearRect(0, 0, cv.width, cv.height);
       }
+      if (payload?.solved && typeof payload.word === "string") {
+        setUjawnione(payload.word);
+      }
     });
   }, [channel, stroke]);
 
@@ -103,7 +131,7 @@ export function Charades({
     return (
       <div className="flex flex-1 flex-col justify-center px-1 py-4">
         <Won
-          title={`To było „${word}”!`}
+          title={`To było „${haslo}”!`}
           sub={
             iDraw
               ? "Twój rysunek wystarczył."

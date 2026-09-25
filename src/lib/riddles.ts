@@ -88,9 +88,13 @@ export function brokenRiddles(): string[] {
   return bledy;
 }
 
-// Ta sama zagadka dla obu osób w parze — bez losowania na kliencie.
-export function riddleForMatch(matchId: string): Riddle {
-  let sum = 0;
+/**
+ * Ta sama zagadka u obojga — ale INNA przy każdej rozgrywce.
+ * Wcześniej wynikała wyłącznie z matchId, więc para dostawała w kółko tę samą
+ * zagadkę do końca świata. Ziarno przychodzi od osoby, która startuje grę.
+ */
+export function riddleForMatch(matchId: string, seed = 0): Riddle {
+  let sum = seed;
   for (let i = 0; i < matchId.length; i++) sum += matchId.charCodeAt(i);
-  return RIDDLES[sum % RIDDLES.length];
+  return RIDDLES[Math.abs(sum) % RIDDLES.length];
 }
