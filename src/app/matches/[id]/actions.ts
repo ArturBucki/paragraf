@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { GAMES, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
+import { LIVE, gameById, gameOfTheDay, DAILY_BONUS } from "@/lib/games";
 
 // Zgoda na losowanie trzymana jako pseudo-gra w tej samej tabeli.
 const RANDOM_ID = "__random__";
@@ -168,7 +168,7 @@ export async function finishGame(
     }),
   ]);
 
-  const unlocked = GAMES.filter((g) => g.unlock > before && g.unlock <= after).map(
+  const unlocked = LIVE.filter((g) => g.unlock > before && g.unlock <= after).map(
     (g) => g.name,
   );
 

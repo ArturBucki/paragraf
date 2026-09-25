@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/supabase/server";
-import { GAMES } from "@/lib/games";
+import { LIVE } from "@/lib/games";
 import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -160,7 +160,7 @@ export default async function Home() {
           </p>
 
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {GAMES.map((g) => (
+            {LIVE.map((g) => (
               <div
                 key={g.id}
                 className="flex items-start gap-3 rounded-2xl border border-[#23305C]/12 bg-[#23305C]/[0.04] p-5"

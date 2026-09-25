@@ -1,6 +1,6 @@
 "use client";
 
-import { GAMES, gameOfTheDay, DAILY_BONUS, type Game } from "@/lib/games";
+import { LIVE, gameOfTheDay, DAILY_BONUS, type Game } from "@/lib/games";
 import { Icon, type IconName } from "@/components/Icon";
 
 type RowState = {
@@ -45,8 +45,8 @@ export function GameStrip({
     if (g.id === dailyId) return 0;
     return st.played ? 2 : 1;
   };
-  const ordered = [...GAMES].sort(
-    (a, b) => rank(a) - rank(b) || GAMES.indexOf(a) - GAMES.indexOf(b),
+  const ordered = [...LIVE].sort(
+    (a, b) => rank(a) - rank(b) || LIVE.indexOf(a) - LIVE.indexOf(b),
   );
 
   return (
@@ -62,8 +62,13 @@ export function GameStrip({
           />
         ))}
 
-        <Plain icon="dice" label="Losuj" tint="#B9770B" onClick={onRandom} />
-        <Plain icon="gamepad" label="Wszystkie" tint="#4657C4" onClick={onOpenAll} />
+        {/* Losowanie i pełna półka pojawiają się, gdy jest w czym wybierać. */}
+        {LIVE.length > 1 && (
+          <>
+            <Plain icon="dice" label="Losuj" tint="#B9770B" onClick={onRandom} />
+            <Plain icon="gamepad" label="Wszystkie" tint="#4657C4" onClick={onOpenAll} />
+          </>
+        )}
       </div>
 
       {/* Delikatne zanikanie na krawędzi — sygnał, że pasek się przewija. */}

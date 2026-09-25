@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import {
-  GAMES,
+  LIVE,
   DAILY_BONUS,
   gameOfTheDay,
   nextUnlock,
@@ -48,7 +48,7 @@ export function GamePicker({
 }) {
 
   const available = useMemo(
-    () => GAMES.filter((g) => points >= g.unlock),
+    () => LIVE.filter((g) => points >= g.unlock),
     [points],
   );
   const daily = useMemo(
@@ -163,7 +163,7 @@ export function GamePicker({
           {/* ------------------------------------------------ WSZYSTKIE GRY */}
           <Section label="Wszystkie gry" note={`${available.length} dostępnych`} />
           <div className="grid grid-cols-2 gap-3">
-            {GAMES.map((g) => {
+            {LIVE.map((g) => {
               const locked = points < g.unlock;
               const s = stateOf(g);
               return (

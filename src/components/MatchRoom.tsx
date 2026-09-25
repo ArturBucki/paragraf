@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
-  GAMES,
+  LIVE,
   gameById,
   gameOfTheDay,
   DAILY_BONUS,
@@ -51,7 +51,8 @@ type Message = {
   read_at?: string | null;
 };
 
-const PLAYABLE = new Set(["riddle", "ttt", "draw", "truths", "q36", "escape"]);
+/** Grywalne = te, które są teraz w apce (patrz LIVE w lib/games.ts). */
+const PLAYABLE = new Set(LIVE.map((g) => g.id));
 const RANDOM_ID = "__random__";
 
 /** Losowanie udaje grę, bo przechodzi przez tę samą zgodę obojga. */
@@ -67,6 +68,7 @@ const RANDOM_GAME: Game = {
   pts: 0,
   unlock: 0,
   kind: "coop",
+  live: true,
 };
 
 export function MatchRoom({
@@ -503,7 +505,7 @@ export function MatchRoom({
         ...prev.filter((r) => r.game_id !== gameId),
         { game_id: gameId, a_wants: false, b_wants: false, played: true },
       ]);
-      const unlocked = GAMES.filter(
+      const unlocked = LIVE.filter(
         (x) => x.unlock > before && x.unlock <= after,
       ).map((x) => x.name);
       flash(
@@ -572,9 +574,9 @@ export function MatchRoom({
   const randomTheirs = !!(isA ? randomRow?.b_wants : randomRow?.a_wants);
   const randomBoth = randomMine && randomTheirs;
 
-  const wheelGames = GAMES.filter(
-    (g) => PLAYABLE.has(g.id) && points >= g.unlock,
-  );
+  const wheelGames = LIVE.filter((g) => points >= g.unlock);
+  /* Losowanie i półka z grami mają sens dopiero przy kilku grach. */
+  const wielGier = LIVE.length > 1;
 
   const stateFor = (id: string) => {
     const r = rowFor(id);
@@ -587,15 +589,15 @@ export function MatchRoom({
     };
   };
 
-  const ready = GAMES.find((g) => {
+  const ready = LIVE.find((g) => {
     const r = rowFor(g.id);
     return !!r?.a_wants && !!r?.b_wants;
   });
-  const invited = GAMES.find((g) => {
+  const invited = LIVE.find((g) => {
     const r = rowFor(g.id);
     return isA ? r?.b_wants && !r?.a_wants : r?.a_wants && !r?.b_wants;
   });
-  const waiting = GAMES.find((g) => {
+  const waiting = LIVE.find((g) => {
     const r = rowFor(g.id);
     return isA ? r?.a_wants && !r?.b_wants : r?.b_wants && !r?.a_wants;
   });
@@ -748,7 +750,7 @@ export function MatchRoom({
         />
       )}
 
-      {randomBoth && (
+      {randomBoth && wielGier && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-bg/95 px-6 backdrop-blur">
           <div className="text-center">
             <p className="font-display text-2xl font-extrabold">Zakręćcie kołem</p>
@@ -825,20 +827,33 @@ function Stream({
             mieć o czym gadać.
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onRandom}
-            className="rounded-xl bg-coral px-5 py-3 font-bold text-[rgb(var(--on-coral))]"
-          >
-            <span className="flex items-center gap-2"><Icon name="dice" className="h-5 w-5" /> Wylosuj grę</span>
-          </button>
+        {/* Przy jednej grze losowanie i półka nie mają czego wybierać. */}
+        {LIVE.length > 1 ? (
+          <div className="flex gap-2">
+            <button
+              onClick={onRandom}
+              className="rounded-xl bg-coral px-5 py-3 font-bold text-[rgb(var(--on-coral))]"
+            >
+              <span className="flex items-center gap-2"><Icon name="dice" className="h-5 w-5" /> Wylosuj grę</span>
+            </button>
+            <button
+              onClick={onOpenGames}
+              className="rounded-xl border border-line bg-surface px-5 py-3 font-bold"
+            >
+              Wybierz
+            </button>
+          </div>
+        ) : (
           <button
             onClick={onOpenGames}
-            className="rounded-xl border border-line bg-surface px-5 py-3 font-bold"
+            className="rounded-xl bg-coral px-5 py-3 font-bold text-[rgb(var(--on-coral))]"
           >
-            Wybierz
+            <span className="flex items-center gap-2">
+              <Icon name={LIVE[0]?.icon ?? "gamepad"} className="h-5 w-5" />
+              Zagrajcie w {LIVE[0]?.name ?? "grę"}
+            </span>
           </button>
-        </div>
+        )}
       </div>
     );
   }
